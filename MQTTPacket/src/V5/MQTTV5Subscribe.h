@@ -43,13 +43,13 @@ DLLExport int32_t MQTTV5Serialize_subscribe(unsigned char* buf, size_t buflen, u
 
 DLLExport int32_t MQTTV5Deserialize_subscribe(unsigned char* dup, unsigned short* packetid, MQTTProperties* properties,
 	int maxcount, int* count, MQTTString topicFilters[], unsigned char requestedQoSs[], MQTTSubscribe_options options[],
-  unsigned char* buf, int len);
+  unsigned char* buf, size_t buflen);
 
 DLLExport int32_t MQTTV5Serialize_suback(unsigned char* buf, size_t buflen, unsigned short packetid,
   MQTTProperties* properties, int count, const unsigned char* reasonCodes);
 
 DLLExport int32_t MQTTV5Deserialize_suback(unsigned short* packetid, MQTTProperties* properties,
-  int maxcount, int* count, unsigned char* reasonCodes, unsigned char* buf, size_t len);
+  int maxcount, int* count, unsigned char* reasonCodes, unsigned char* buf, size_t buflen);
 
 
 #endif /* MQTTV5SUBSCRIBE_H_ */
