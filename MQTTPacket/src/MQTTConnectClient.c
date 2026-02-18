@@ -79,7 +79,8 @@ int MQTTSerialize_connect(unsigned char* buf, int32_t buflen, MQTTPacket_connect
 #endif
 {
 	unsigned char *ptr = buf;
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	MQTTConnectFlags flags = {0};
 	int32_t len = 0;
 	int rc = -1;
@@ -172,7 +173,8 @@ int MQTTV5Deserialize_connack(MQTTProperties* connackProperties, unsigned char* 
 int MQTTDeserialize_connack(unsigned char* sessionPresent, unsigned char* connack_rc, unsigned char* buf, int32_t buflen)
 #endif
 {
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int rc = 0;
@@ -219,7 +221,8 @@ int MQTTV5Serialize_zero(unsigned char* buf, int32_t buflen, unsigned char packe
 int MQTTSerialize_zero(unsigned char* buf, int32_t buflen, unsigned char packettype)
 #endif
 {
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	int rc = -1;
 	unsigned char *ptr = buf;
 	int32_t len = 0;

@@ -46,7 +46,8 @@ int32_t MQTTDeserialize_publish(unsigned char* dup, unsigned char* qos, unsigned
 		unsigned char** payload, int32_t* payloadlen, unsigned char* buf, int32_t buflen)
 #endif
 {
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = 0;
@@ -101,7 +102,8 @@ int32_t MQTTV5Deserialize_ack(unsigned char* packettype, unsigned char* dup, uns
 int32_t MQTTDeserialize_ack(unsigned char* packettype, unsigned char* dup, unsigned short* packetid, unsigned char* buf, int32_t buflen)
 #endif
 {
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = 0;

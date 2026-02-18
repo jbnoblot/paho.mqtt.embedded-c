@@ -88,3 +88,10 @@ CMakeUserPresets.json
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #cmake-build-*
+
+MQTTPacket/samples
+MQTTPacket/test
+MQTTClient-C/samples
+MQTTClient-C/test
+MQTTClient-CPP/samples
+MQTTClient-CPP/test

@@ -70,7 +70,8 @@ int32_t MQTTSerialize_subscribe(unsigned char* buf, int32_t buflen, unsigned cha
 #endif
 {
 	unsigned char *ptr = buf;
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	int32_t rem_len = 0;
 	int32_t rc = 0;
 	int i = 0;
@@ -149,7 +150,8 @@ int32_t MQTTDeserialize_suback(unsigned short* packetid, int maxcount, int* coun
 	unsigned char* buf, int32_t buflen)
 #endif
 {
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = 0;

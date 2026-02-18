@@ -474,7 +474,8 @@ template<class Network, class Timer, int MAX_MQTT_PACKET_SIZE, int b>
 int MQTT::Client<Network, Timer, MAX_MQTT_PACKET_SIZE, b>::readPacket(Timer& timer)
 {
     int rc = FAILURE;
-    MQTTHeader header = {0};
+    MQTTHeader header;
+	memset(&header, 0, sizeof(header));
     int32_t len = 0;
     int rem_len = 0;
 

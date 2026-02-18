@@ -69,7 +69,8 @@ int32_t MQTTSerialize_unsubscribe(unsigned char* buf, int32_t buflen, unsigned c
 #endif
 {
 	unsigned char *ptr = buf;
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	int32_t rem_len = 0;
 	int32_t rc = -1;
 	int i = 0;

@@ -75,8 +75,10 @@ int32_t MQTTV5Deserialize_connect(MQTTProperties* connectProperties, MQTTV5Packe
 int32_t MQTTDeserialize_connect(MQTTPacket_connectData* data, unsigned char* buf, int32_t len)
 #endif
 {
-	MQTTHeader header = {0};
-	MQTTConnectFlags flags = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
+	MQTTConnectFlags flags;
+	memset(&flags, 0, sizeof(flags));
 	unsigned char* curdata = buf;
 	unsigned char* enddata = &buf[len];
 	int32_t rc = 0;
@@ -167,7 +169,8 @@ int32_t MQTTV5Serialize_connack(unsigned char* buf, int32_t buflen, unsigned cha
 int32_t MQTTSerialize_connack(unsigned char* buf, int32_t buflen, unsigned char connack_rc, unsigned char sessionPresent)
 #endif
 {
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	int32_t rc = 0;
 	unsigned char *ptr = buf;
 	MQTTConnackFlags flags = {0};
@@ -213,7 +216,8 @@ exit:
 int32_t MQTTV5Deserialize_zero(unsigned char packettype, MQTTProperties* properties, unsigned char* reasonCode,
 	    unsigned char* buf, int32_t buflen)
 {
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = 0;

@@ -119,7 +119,8 @@ char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf,
 {
 	int index = 0;
 	int rem_length = 0;
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	int strindex = 0;
 
 	header.byte = buf[index++];
@@ -189,7 +190,8 @@ char* MQTTFormat_toServerString(char* strbuf, int strbuflen, unsigned char* buf,
 {
 	int index = 0;
 	int rem_length = 0;
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	int strindex = 0;
 
 	header.byte = buf[index++];

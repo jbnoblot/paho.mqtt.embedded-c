@@ -46,7 +46,8 @@ int32_t MQTTDeserialize_subscribe(unsigned char* dup, unsigned short* packetid, 
 	unsigned char requestedQoSs[], unsigned char* buf, int32_t buflen)
 #endif
 {
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = MQTTPACKET_READ_ERROR;
@@ -117,7 +118,8 @@ int32_t MQTTV5Serialize_suback(unsigned char* buf, int32_t buflen, unsigned shor
 int32_t MQTTSerialize_suback(unsigned char* buf, int buflen, unsigned short packetid, int count, unsigned char* grantedQoSs)
 #endif
 {
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	int32_t rc = -1;
 	unsigned char *ptr = buf;
 	int i;

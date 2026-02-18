@@ -75,7 +75,8 @@ int32_t MQTTSerialize_publish(unsigned char* buf, int32_t buflen, unsigned char 
 #endif
 {
 	unsigned char *ptr = buf;
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	int32_t rem_len = 0;
 	int32_t rc = 0;
 
@@ -136,7 +137,8 @@ int32_t MQTTV5Serialize_ack(unsigned char* buf, int32_t buflen, unsigned char pa
 int32_t MQTTSerialize_ack(unsigned char* buf, int32_t buflen, unsigned char packettype, unsigned char dup, unsigned short packetid)
 #endif
 {
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	int32_t rc = 0;
 	unsigned char *ptr = buf;
 	int32_t len = 2;

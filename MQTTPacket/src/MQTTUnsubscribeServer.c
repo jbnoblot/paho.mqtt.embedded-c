@@ -45,7 +45,8 @@ int32_t MQTTDeserialize_unsubscribe(unsigned char* dup, unsigned short* packetid
 	unsigned char* buf, int32_t len)
 #endif
 {
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = 0;
@@ -101,7 +102,8 @@ int32_t MQTTV5Serialize_unsuback(unsigned char* buf, int32_t buflen, unsigned sh
 int32_t MQTTSerialize_unsuback(unsigned char* buf, int32_t buflen, unsigned short packetid)
 #endif
 {
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	int32_t rc = 0;
 	unsigned char *ptr = buf;
 	int32_t len = 2;

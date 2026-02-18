@@ -121,7 +121,8 @@ exit:
 
 static int readPacket(MQTTClient* c, Timer* timer)
 {
-    MQTTHeader header = {0};
+    MQTTHeader header;
+    memset(&header, 0, sizeof(header));
     int32_t len = 0;
     int rem_len = 0;
 

@@ -119,7 +119,8 @@ char* MQTTV5Format_toClientString(char* strbuf, int strbuflen, unsigned char* bu
 {
 	int index = 0;
 	int rem_length = 0;
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	int strindex = 0;
 
 	header.byte = buf[index++];
@@ -197,7 +198,8 @@ char* MQTTV5Format_toServerString(char* strbuf, int strbuflen, unsigned char* bu
 {
 	int index = 0;
 	int rem_length = 0;
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	int strindex = 0;
 
 	header.byte = buf[index++];

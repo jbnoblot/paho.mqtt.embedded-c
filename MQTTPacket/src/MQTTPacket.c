@@ -311,7 +311,8 @@ int MQTTPacket_read(unsigned char* buf, int32_t buflen, int (*getfn)(unsigned ch
 #endif
 {
 	int rc = -1;
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 	int32_t len = 0;
 	int rem_len = 0;
 
@@ -395,7 +396,8 @@ int MQTTPacket_readnb(unsigned char* buf, int32_t buflen, MQTTTransport *trp)
 #endif
 {
 	int rc = -1, frc;
-	MQTTHeader header = {0};
+	MQTTHeader header;
+	memset(&header, 0, sizeof(header));
 
 	switch(trp->state){
 	default:
