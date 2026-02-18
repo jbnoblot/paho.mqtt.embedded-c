@@ -16,6 +16,7 @@
 #define MQTTPACKETINTERNAL_H_
 
 #include <stdint.h>
+#include <stddef.h>
 
 #if defined(__cplusplus) /* If this is a C++ compiler, use C linkage */
 extern "C" {
@@ -73,7 +74,7 @@ typedef union
 
 typedef struct
 {
-	int32_t len;
+	size_t len;
 	char* data;
 } MQTTLenString;
 
@@ -85,10 +86,10 @@ typedef struct
 
 #define MQTTString_initializer {NULL, {0, NULL}}
 
-int MQTTstrlen(MQTTString mqttstring);
+int MQTTstrlen(const MQTTString* mqttstring);
 
-int32_t MQTTPacket_VBIlen(int32_t rem_len);
-int32_t MQTTPacket_len(int32_t rem_len);
+int32_t MQTTPacket_VBIlen(size_t rem_len);
+size_t MQTTPacket_len(size_t rem_len);
 int32_t MQTTPacket_decode(int (*getcharfn)(unsigned char*, int), int32_t* value);
 int32_t MQTTPacket_decodeBuf(unsigned char* buf, int32_t* value);
 
@@ -96,9 +97,9 @@ int readInt(unsigned char** pptr);
 char readChar(unsigned char** pptr);
 void writeChar(unsigned char** pptr, char c);
 void writeInt(unsigned char** pptr, int anInt);
-int readMQTTLenString(MQTTString* mqttstring, unsigned char** pptr, unsigned char* enddata);
+int readMQTTLenString(MQTTString* mqttstring, unsigned char** pptr, const unsigned char* enddata);
 void writeCString(unsigned char** pptr, const char* string);
-void writeMQTTString(unsigned char** pptr, MQTTString mqttstring);
+void writeMQTTString(unsigned char** pptr, const MQTTString* mqttstring);
 
 #if defined(MQTTV5)
 #define MQTTPacket_encode_internal MQTTV5Packet_encode

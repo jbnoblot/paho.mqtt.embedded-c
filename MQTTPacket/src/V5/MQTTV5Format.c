@@ -13,7 +13,7 @@
  *******************************************************************************/
 
 // TODO: Add MQTTv5 properties implementation (some of the code exists in v5log.h), application must provide memory.
-#include "StackTrace.h"
+#include "../StackTrace.h"
 #include "MQTTV5Packet.h"
 
 #include <string.h>
@@ -115,7 +115,7 @@ int MQTTV5StringFormat_unsubscribe(char* strbuf, int strbuflen, unsigned char du
 
 
 #if defined(MQTT_CLIENT)
-char* MQTTV5Format_toClientString(char* strbuf, int strbuflen, unsigned char* buf, int32_t buflen)
+char* MQTTV5Format_toClientString(char* strbuf, int strbuflen, unsigned char* buf, size_t buflen)
 {
 	int index = 0;
 	int rem_length = 0;
@@ -194,7 +194,7 @@ char* MQTTV5Format_toClientString(char* strbuf, int strbuflen, unsigned char* bu
 #endif
 
 #if defined(MQTT_SERVER)
-char* MQTTV5Format_toServerString(char* strbuf, int strbuflen, unsigned char* buf, int32_t buflen)
+char* MQTTV5Format_toServerString(char* strbuf, int strbuflen, unsigned char* buf, size_t buflen)
 {
 	int index = 0;
 	int rem_length = 0;

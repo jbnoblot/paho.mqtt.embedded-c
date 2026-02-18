@@ -163,10 +163,10 @@ exit:
   * @return serialized length, or error if 0
   */
 #if defined(MQTTV5)
-int32_t MQTTV5Serialize_connack(unsigned char* buf, int32_t buflen, unsigned char connack_rc, unsigned char sessionPresent,
+int32_t MQTTV5Serialize_connack(unsigned char* buf, size_t buflen, unsigned char connack_rc, unsigned char sessionPresent,
   MQTTProperties* connackProperties)
 #else
-int32_t MQTTSerialize_connack(unsigned char* buf, int32_t buflen, unsigned char connack_rc, unsigned char sessionPresent)
+int32_t MQTTSerialize_connack(unsigned char* buf, size_t buflen, unsigned char connack_rc, unsigned char sessionPresent)
 #endif
 {
 	MQTTHeader header;
@@ -214,7 +214,7 @@ exit:
 
 #if defined(MQTTV5)
 int32_t MQTTV5Deserialize_zero(unsigned char packettype, MQTTProperties* properties, unsigned char* reasonCode,
-	    unsigned char* buf, int32_t buflen)
+	    unsigned char* buf, size_t buflen)
 {
 	MQTTHeader header;
 	memset(&header, 0, sizeof(header));
@@ -255,18 +255,18 @@ exit:
   */
 #if defined(MQTTV5)
 int32_t MQTTV5Deserialize_disconnect(MQTTProperties* properties, unsigned char* reasonCode,
-	    unsigned char* buf, int32_t buflen)
+	    unsigned char* buf, size_t buflen)
 {
 	return MQTTV5Deserialize_zero(DISCONNECT, properties, reasonCode, buf, buflen);
 }
 
 int32_t MQTTV5Deserialize_auth(MQTTProperties* properties, unsigned char* reasonCode,
-	    unsigned char* buf, int32_t buflen)
+	    unsigned char* buf, size_t buflen)
 {
 	return MQTTV5Deserialize_zero(AUTH, properties, reasonCode, buf, buflen);
 }
 #else
-int32_t MQTTDeserialize_disconnect(unsigned char* buf, int32_t buflen)
+int32_t MQTTDeserialize_disconnect(unsigned char* buf, size_t buflen)
 {
 	unsigned char type = 0;
 	unsigned char dup = 0;

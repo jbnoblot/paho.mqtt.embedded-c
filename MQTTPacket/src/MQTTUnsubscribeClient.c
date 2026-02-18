@@ -41,7 +41,7 @@ int32_t MQTTSerialize_unsubscribeLength(int count, MQTTString topicFilters[])
 	int32_t len = 2; /* packetid */
 
 	for (i = 0; i < count; ++i)
-		len += 2 + MQTTstrlen(topicFilters[i]); /* length + topic*/
+		len += 2 + MQTTstrlen(&topicFilters[i]); /* length + topic*/
 #if defined(MQTTV5)
 	if (properties)
 		len += MQTTProperties_len(properties);
@@ -61,10 +61,10 @@ int32_t MQTTSerialize_unsubscribeLength(int count, MQTTString topicFilters[])
   * @return the length of the serialized data.  <= 0 indicates error
   */
 #if defined(MQTTV5)
-int32_t MQTTV5Serialize_unsubscribe(unsigned char* buf, int32_t buflen, unsigned char dup, unsigned short packetid,
+int32_t MQTTV5Serialize_unsubscribe(unsigned char* buf, size_t buflen, unsigned char dup, unsigned short packetid,
 			MQTTProperties* properties, int count, MQTTString topicFilters[])
 #else
-int32_t MQTTSerialize_unsubscribe(unsigned char* buf, int32_t buflen, unsigned char dup, unsigned short packetid,
+int32_t MQTTSerialize_unsubscribe(unsigned char* buf, size_t buflen, unsigned char dup, unsigned short packetid,
 		int count, MQTTString topicFilters[])
 #endif
 {
@@ -102,7 +102,7 @@ int32_t MQTTSerialize_unsubscribe(unsigned char* buf, int32_t buflen, unsigned c
 #endif
 
 	for (i = 0; i < count; ++i)
-		writeMQTTString(&ptr, topicFilters[i]);
+		writeMQTTString(&ptr, &topicFilters[i]);
 
 	rc = ptr - buf;
 exit:
@@ -120,9 +120,9 @@ exit:
   */
 #if defined(MQTTV5)
 int32_t MQTTV5Deserialize_unsuback(unsigned short* packetid, MQTTProperties* properties,
-		int maxcount, int* count, unsigned char* reasonCodes, unsigned char* buf, int32_t buflen)
+		int maxcount, int* count, unsigned char* reasonCodes, unsigned char* buf, size_t buflen)
 #else
-int32_t MQTTDeserialize_unsuback(unsigned short* packetid, unsigned char* buf, int32_t buflen)
+int32_t MQTTDeserialize_unsuback(unsigned short* packetid, unsigned char* buf, size_t buflen)
 #endif
 {
 #if !defined(MQTTV5)

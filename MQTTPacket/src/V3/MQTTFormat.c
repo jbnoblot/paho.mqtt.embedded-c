@@ -14,8 +14,8 @@
  *    Ian Craggs - initial API and implementation and/or initial documentation
  *******************************************************************************/
 
-#include "StackTrace.h"
-#include "MQTTPacket.h"
+#include "../StackTrace.h"
+#include "../MQTTPacket.h"
 
 #include <string.h>
 
@@ -115,7 +115,7 @@ int MQTTStringFormat_unsubscribe(char* strbuf, int strbuflen, unsigned char dup,
 
 
 #if defined(MQTT_CLIENT)
-char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf, int32_t buflen)
+char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf, size_t buflen)
 {
 	int index = 0;
 	int rem_length = 0;
@@ -186,7 +186,7 @@ char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf,
 #endif
 
 #if defined(MQTT_SERVER)
-char* MQTTFormat_toServerString(char* strbuf, int strbuflen, unsigned char* buf, int32_t buflen)
+char* MQTTFormat_toServerString(char* strbuf, int strbuflen, unsigned char* buf, size_t buflen)
 {
 	int index = 0;
 	int rem_length = 0;

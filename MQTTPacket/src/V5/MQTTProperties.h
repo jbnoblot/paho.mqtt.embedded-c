@@ -84,7 +84,7 @@ typedef struct MQTTProperties
 
 #define MQTTProperties_initializer {0, 0, 0, NULL}
 
-DLLExport int MQTTProperties_len(MQTTProperties* props);
+DLLExport int MQTTProperties_len(const MQTTProperties* props);
 
 /**
  * Add the property pointer to the property array, no allocation, just a reference

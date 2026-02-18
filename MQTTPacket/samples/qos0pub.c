@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 	len = MQTTSerialize_connect((unsigned char *)buf, buflen, &data);
 
 	topicString.cstring = "mytopic";
-	len += MQTTSerialize_publish((unsigned char *)(buf + len), buflen - len, 0, 0, 0, 0, topicString, (unsigned char *)payload, payloadlen);
+	len += MQTTSerialize_publish((unsigned char *)(buf + len), buflen - len, 0, 0, 0, 0, &topicString, (unsigned char *)payload, payloadlen);
 
 	len += MQTTSerialize_disconnect((unsigned char *)(buf + len), buflen - len);
 

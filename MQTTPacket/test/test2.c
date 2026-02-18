@@ -234,7 +234,7 @@ int test2(struct Options options)
 	MyLog(LOGA_INFO, "Starting test 2 - serialization of publish and back");
 
 	topicString.cstring = "mytopic";
-	rc = MQTTV5Serialize_publish(buf, buflen, dup, qos, retained, msgid, topicString,
+	rc = MQTTV5Serialize_publish(buf, buflen, dup, qos, retained, msgid, &topicString,
 			&properties, payload, payloadlen);
 	assert("good rc from serialize publish", rc > 0, "rc was %d\n", rc);
 

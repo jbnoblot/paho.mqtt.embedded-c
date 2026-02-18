@@ -39,10 +39,10 @@
   */
 #if defined(MQTTV5)
 int32_t MQTTV5Deserialize_unsubscribe(unsigned char* dup, unsigned short* packetid, MQTTProperties* properties,
-	int maxcount, int* count, MQTTString topicFilters[], unsigned char* buf, int32_t len)
+	int maxcount, int* count, MQTTString topicFilters[], unsigned char* buf, size_t buflen)
 #else
 int32_t MQTTDeserialize_unsubscribe(unsigned char* dup, unsigned short* packetid, int maxcount, int* count, MQTTString topicFilters[],
-	unsigned char* buf, int32_t len)
+	unsigned char* buf, size_t buflen)
 #endif
 {
 	MQTTHeader header;
@@ -96,10 +96,10 @@ exit:
   * @return the length of the serialized data.  <= 0 indicates error
   */
 #if defined(MQTTV5)
-int32_t MQTTV5Serialize_unsuback(unsigned char* buf, int32_t buflen, unsigned short packetid,
+int32_t MQTTV5Serialize_unsuback(unsigned char* buf, size_t buflen, unsigned short packetid,
   MQTTProperties* properties, int count, unsigned char* reasonCodes)
 #else
-int32_t MQTTSerialize_unsuback(unsigned char* buf, int32_t buflen, unsigned short packetid)
+int32_t MQTTSerialize_unsuback(unsigned char* buf, size_t buflen, unsigned short packetid)
 #endif
 {
 	MQTTHeader header;

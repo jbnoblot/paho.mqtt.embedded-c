@@ -696,7 +696,7 @@ int MQTTPublish(MQTTClient* c, const char* topicName, MQTTMessage* message)
         message->id = getNextPacketId(c);
 
     len = MQTTSerialize_publish(c->buf, c->buf_size, 0, message->qos, message->retained, message->id,
-              topic, (unsigned char*)message->payload, message->payloadlen);
+              &topic, message->payload, message->payloadlen);
     if (len <= 0)
         goto exit;
     if ((rc = sendPacket(c, len, &timer)) != MQTTCLIENT_SUCCESS) // send the subscribe packet

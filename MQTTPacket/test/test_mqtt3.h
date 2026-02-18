@@ -91,7 +91,7 @@ int test_v3(struct Options options)
 	}
 
 	topicString.cstring = test_topic;
-	len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, (unsigned char *)payload, payloadlen);
+	len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, &topicString, (unsigned char *)payload, payloadlen);
 	rc = transport_sendPacketBuffer(mysock, buf, len);
 	assert("rc and len should be the same",  rc == len, "rc was different %d\n", rc);
 
@@ -118,7 +118,7 @@ int test_v3(struct Options options)
 
 	/* Publish QoS 1 this time */
 	topicString.cstring = test_topic;
-	len = MQTTSerialize_publish(buf, buflen, 0, 1, 0, ++msgid, topicString, (unsigned char *)payload, payloadlen);
+	len = MQTTSerialize_publish(buf, buflen, 0, 1, 0, ++msgid, &topicString, (unsigned char *)payload, payloadlen);
 	rc = transport_sendPacketBuffer(mysock, buf, len);
 	assert("rc and len should be the same",  rc == len, "rc was different %d\n", rc);
 
@@ -165,7 +165,7 @@ int test_v3(struct Options options)
 
 	/* Publish QoS 2 this time */
 	topicString.cstring = test_topic;
-	len = MQTTSerialize_publish(buf, buflen, 0, 2, 0, ++msgid, topicString, (unsigned char *)payload, payloadlen);
+	len = MQTTSerialize_publish(buf, buflen, 0, 2, 0, ++msgid, &topicString, (unsigned char *)payload, payloadlen);
 	rc = transport_sendPacketBuffer(mysock, buf, len);
 	assert("rc and len should be the same",  rc == len, "rc was different %d\n", rc);
 

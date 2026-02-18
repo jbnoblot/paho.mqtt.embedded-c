@@ -97,7 +97,7 @@ exit:
 }
 
 
-int32_t MQTTPacket_VBIlen(int32_t rem_len)
+int32_t MQTTPacket_VBIlen(size_t rem_len)
 {
 	int32_t rc = 0;
 
@@ -113,10 +113,10 @@ int32_t MQTTPacket_VBIlen(int32_t rem_len)
 }
 
 
-int32_t MQTTPacket_len(int32_t rem_len)
+size_t MQTTPacket_len(size_t rem_len)
 {
 	/* header byte + remaining length */
-	return rem_len + 1  + MQTTPacket_VBIlen(rem_len);
+	return rem_len + 1 + MQTTPacket_VBIlen(rem_len);
 }
 
 static unsigned char* bufptr;
@@ -198,24 +198,26 @@ void writeInt(unsigned char** pptr, int anInt)
  */
 void writeCString(unsigned char** pptr, const char* string)
 {
-	int32_t len = strlen(string);
+	size_t len = strlen(string);
 	writeInt(pptr, len);
 	memcpy(*pptr, string, len);
 	*pptr += len;
 }
 
-void writeMQTTString(unsigned char** pptr, MQTTString mqttstring)
+void writeMQTTString(unsigned char** pptr, const MQTTString* mqttstring)
 {
-	if (mqttstring.lenstring.len > 0)
+	if (mqttstring->lenstring.len > 0)
 	{
-		writeInt(pptr, mqttstring.lenstring.len);
-		memcpy(*pptr, mqttstring.lenstring.data, mqttstring.lenstring.len);
-		*pptr += mqttstring.lenstring.len;
+		writeInt(pptr, mqttstring->lenstring.len);
+		memcpy(*pptr, mqttstring->lenstring.data, mqttstring->lenstring.len);
+		*pptr += mqttstring->lenstring.len;
 	}
-	else if (mqttstring.cstring)
-		writeCString(pptr, mqttstring.cstring);
-	else
+	else if (mqttstring->cstring) {
+		writeCString(pptr, mqttstring->cstring);
+	}
+	else {
 		writeInt(pptr, 0);
+	}
 }
 
 
@@ -225,7 +227,7 @@ void writeMQTTString(unsigned char** pptr, MQTTString mqttstring)
  * @param enddata pointer to the end of the data: do not read beyond
  * @return 1 if successful, 0 if not
  */
-int readMQTTLenString(MQTTString* mqttstring, unsigned char** pptr, unsigned char* enddata)
+int readMQTTLenString(MQTTString* mqttstring, unsigned char** pptr, const unsigned char* enddata)
 {
 	int rc = 0;
 
@@ -252,14 +254,14 @@ int readMQTTLenString(MQTTString* mqttstring, unsigned char** pptr, unsigned cha
  * @param mqttstring the string to return the length of
  * @return the length of the string
  */
-int MQTTstrlen(MQTTString mqttstring)
+int MQTTstrlen(const MQTTString* mqttstring)
 {
-	int rc = 0;
+	size_t rc = 0;
 
-	if (mqttstring.cstring)
-		rc = strlen(mqttstring.cstring);
+	if (mqttstring->cstring)
+		rc = strlen(mqttstring->cstring);
 	else
-		rc = mqttstring.lenstring.len;
+		rc = mqttstring->lenstring.len;
 	return rc;
 }
 
@@ -271,12 +273,12 @@ int MQTTstrlen(MQTTString mqttstring)
  * @return boolean - equal or not
  */
 #if defined(MQTTV5)
-int MQTTV5Packet_equals(MQTTString* a, char* bptr)
+int MQTTV5Packet_equals(const MQTTString* a, char* bptr)
 #else
-int MQTTPacket_equals(MQTTString* a, char* bptr)
+int MQTTPacket_equals(const MQTTString* a, char* bptr)
 #endif
 {
-	int alen = 0,
+	size_t alen = 0,
 		blen = 0;
 	char *aptr;
 
@@ -305,9 +307,9 @@ int MQTTPacket_equals(MQTTString* a, char* bptr)
  * @note  the whole message must fit into the caller's buffer
  */
 #if defined(MQTTV5)
-int MQTTV5Packet_read(unsigned char* buf, int32_t buflen, int (*getfn)(unsigned char*, int))
+int MQTTV5Packet_read(unsigned char* buf, size_t buflen, int (*getfn)(unsigned char*, int))
 #else
-int MQTTPacket_read(unsigned char* buf, int32_t buflen, int (*getfn)(unsigned char*, int))
+int MQTTPacket_read(unsigned char* buf, size_t buflen, int (*getfn)(unsigned char*, int))
 #endif
 {
 	int rc = -1;
@@ -390,9 +392,9 @@ exit:
  * @note  the whole message must fit into the caller's buffer
  */
 #if defined(MQTTV5)
-int MQTTV5Packet_readnb(unsigned char* buf, int32_t buflen, MQTTV5Transport *trp)
+int MQTTV5Packet_readnb(unsigned char* buf, size_t buflen, MQTTV5Transport *trp)
 #else
-int MQTTPacket_readnb(unsigned char* buf, int32_t buflen, MQTTTransport *trp)
+int MQTTPacket_readnb(unsigned char* buf, size_t buflen, MQTTTransport *trp)
 #endif
 {
 	int rc = -1, frc;

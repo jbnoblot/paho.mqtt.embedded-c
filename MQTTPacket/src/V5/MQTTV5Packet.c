@@ -52,11 +52,11 @@ int readInt4(unsigned char** pptr)
 }
 
 
-void writeMQTTLenString(unsigned char** pptr, MQTTLenString lenstring)
+void writeMQTTLenString(unsigned char** pptr, const MQTTLenString* lenstring)
 {
-  writeInt(pptr, lenstring.len);
-  memcpy(*pptr, lenstring.data, lenstring.len);
-  *pptr += lenstring.len;
+  writeInt(pptr, lenstring->len);
+  memcpy(*pptr, lenstring->data, lenstring->len);
+  *pptr += lenstring->len;
 }
 
 

@@ -32,16 +32,16 @@
   * @return the length of buffer needed to contain the serialized version of the packet
   */
 #if defined(MQTTV5)
-int32_t MQTTV5Serialize_subscribeLength(int count, MQTTString topicFilters[], MQTTProperties* properties)
+int32_t MQTTV5Serialize_subscribeLength(int count, const MQTTString topicFilters[], MQTTProperties* properties)
 #else
-int32_t MQTTSerialize_subscribeLength(int count, MQTTString topicFilters[])
+int32_t MQTTSerialize_subscribeLength(int count, const MQTTString topicFilters[])
 #endif
 {
 	int i;
 	int32_t len = 2; /* packetid */
 
 	for (i = 0; i < count; ++i)
-		len += 2 + MQTTstrlen(topicFilters[i]) + 1; /* length + topic + req_qos */
+		len += 2 + MQTTstrlen(&topicFilters[i]) + 1; /* length + topic + req_qos */
 #if defined(MQTTV5)
   if (properties)
 	  len += MQTTProperties_len(properties);
@@ -62,11 +62,11 @@ int32_t MQTTSerialize_subscribeLength(int count, MQTTString topicFilters[])
   * @return the length of the serialized data.  <= 0 indicates error
   */
 #if defined(MQTTV5)
-int32_t MQTTV5Serialize_subscribe(unsigned char* buf, int32_t buflen, unsigned char dup, unsigned short packetid,
-		MQTTProperties* properties, int count, MQTTString topicFilters[], unsigned char requestedQoSs[], MQTTSubscribe_options options[])
+int32_t MQTTV5Serialize_subscribe(unsigned char* buf, size_t buflen, unsigned char dup, unsigned short packetid,
+		MQTTProperties* properties, int count, MQTTString topicFilters[], const unsigned char requestedQoSs[], MQTTSubscribe_options options[])
 #else
-int32_t MQTTSerialize_subscribe(unsigned char* buf, int32_t buflen, unsigned char dup, unsigned short packetid, int count,
-		MQTTString topicFilters[], unsigned char requestedQoSs[])
+int32_t MQTTSerialize_subscribe(unsigned char* buf, size_t buflen, unsigned char dup, unsigned short packetid, int count,
+		MQTTString topicFilters[], const unsigned char requestedQoSs[])
 #endif
 {
 	unsigned char *ptr = buf;
@@ -113,7 +113,7 @@ int32_t MQTTSerialize_subscribe(unsigned char* buf, int32_t buflen, unsigned cha
 			opts |= (options[i].retainHandling << 4); /* 2 bits */
 		}
 #endif
-		writeMQTTString(&ptr, topicFilters[i]);
+		writeMQTTString(&ptr, &topicFilters[i]);
 		writeChar(&ptr, opts);
 	}
 
@@ -137,17 +137,17 @@ exit:
   */
 #if defined(MQTTV5)
 int32_t MQTTV5Deserialize_suback(unsigned short* packetid, MQTTProperties* properties,
-	  int maxcount, int* count, unsigned char* reasonCodes, unsigned char* buf, int32_t buflen)
+	  int maxcount, int* count, unsigned char* reasonCodes, unsigned char* buf, size_t buflen)
 {
 	return MQTTV5Deserialize_subunsuback(SUBACK, packetid, properties,
 		maxcount, count, reasonCodes, buf, buflen);
 }
 
 int32_t MQTTV5Deserialize_subunsuback(int type, unsigned short* packetid, MQTTProperties* properties,
-	  int maxcount, int* count, unsigned char* reasonCodes, unsigned char* buf, int32_t buflen)
+	  int maxcount, int* count, unsigned char* reasonCodes, unsigned char* buf, size_t buflen)
 #else
 int32_t MQTTDeserialize_suback(unsigned short* packetid, int maxcount, int* count, unsigned char grantedQoSs[],
-	unsigned char* buf, int32_t buflen)
+	unsigned char* buf, size_t buflen)
 #endif
 {
 	MQTTHeader header;

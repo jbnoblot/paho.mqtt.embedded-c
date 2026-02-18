@@ -25,14 +25,14 @@
   #define DLLExport
 #endif
 
-DLLExport int32_t MQTTSerialize_unsubscribe(unsigned char* buf, int32_t buflen, unsigned char dup, unsigned short packetid,
+DLLExport int32_t MQTTSerialize_unsubscribe(unsigned char* buf, size_t buflen, unsigned char dup, unsigned short packetid,
 		int count, MQTTString topicFilters[]);
 
 DLLExport int32_t MQTTDeserialize_unsubscribe(unsigned char* dup, unsigned short* packetid, int max_count, int* count, MQTTString topicFilters[],
-		unsigned char* buf, int32_t len);
+		unsigned char* buf, size_t buflen);
 
-DLLExport int32_t MQTTSerialize_unsuback(unsigned char* buf, int32_t buflen, unsigned short packetid);
+DLLExport int32_t MQTTSerialize_unsuback(unsigned char* buf, size_t buflen, unsigned short packetid);
 
-DLLExport int32_t MQTTDeserialize_unsuback(unsigned short* packetid, unsigned char* buf, int32_t len);
+DLLExport int32_t MQTTDeserialize_unsuback(unsigned short* packetid, unsigned char* buf, size_t buflen);
 
 #endif /* MQTTUNSUBSCRIBE_H_ */
