@@ -133,12 +133,13 @@ int32_t MQTTDeserialize_unsuback(unsigned short* packetid, unsigned char* buf, s
 
 	FUNC_ENTRY;
 #if defined(MQTTV5)
-  rc = MQTTV5Deserialize_subunsuback(UNSUBACK, packetid, properties,
+	rc = MQTTV5Deserialize_subunsuback(UNSUBACK, packetid, properties,
 		                       maxcount, count, reasonCodes, buf, buflen);
 #else
 	rc = MQTTDeserialize_ack(&type, &dup, packetid, buf, buflen);
-	if (type == UNSUBACK)
+	if (type == UNSUBACK) {
 		rc = 1;
+	}
 #endif
 	FUNC_EXIT_RC(rc);
 	return rc;

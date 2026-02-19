@@ -141,16 +141,19 @@ int MQTTSerialize_connect(unsigned char* buf, size_t buflen, MQTTPacket_connectD
 	{
 #if defined(MQTTV5)
 		/* write will properties */
-		if (options->MQTTVersion == 5 && options->will.properties)
+		if (options->MQTTVersion == 5 && options->will.properties) {
 		  MQTTProperties_write(&ptr, options->will.properties);
+		}
 #endif
 		writeMQTTString(&ptr, &options->will.topicName);
 		writeMQTTString(&ptr, &options->will.message);
 	}
-	if (flags.bits.username)
+	if (flags.bits.username) {
 		writeMQTTString(&ptr, &options->username);
-	if (flags.bits.password)
+	}
+	if (flags.bits.password) {
 		writeMQTTString(&ptr, &options->password);
+	}
 
 	rc = ptr - buf;
 
@@ -179,7 +182,7 @@ int MQTTDeserialize_connack(unsigned char* sessionPresent, unsigned char* connac
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int rc = 0;
-	int32_t mylen;
+	size_t mylen = 0;
 	MQTTConnackFlags flags = {0};
 
 	FUNC_ENTRY;

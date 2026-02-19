@@ -32,15 +32,15 @@ extern "C" {
 void writeInt4(unsigned char** pptr, int anInt);
 int readInt4(unsigned char** pptr);
 void writeMQTTLenString(unsigned char** pptr, const MQTTLenString* lenstring);
-int MQTTLenStringRead(MQTTLenString* lenstring, unsigned char** pptr, unsigned char* enddata);
+int MQTTLenStringRead(MQTTLenString* lenstring, unsigned char** pptr, const unsigned char* enddata);
 
 DLLExport int32_t MQTTV5Serialize_ack(unsigned char* buf, size_t buflen, unsigned char packettype, unsigned char dup, unsigned short packetid,
 	unsigned char reasonCode, MQTTProperties* properties);
 DLLExport int32_t MQTTV5Deserialize_ack(unsigned char* packettype, unsigned char* dup, unsigned short* packetid,
 	unsigned char *reasonCode, MQTTProperties* properties, unsigned char* buf, size_t buflen);
 
-DLLExport int MQTTV5Packet_equals(const MQTTString* a, char* b);
-DLLExport int32_t MQTTV5Packet_encode(unsigned char* buf, int32_t length);
+DLLExport int MQTTPacket_equals(const MQTTString* a, char* b);
+DLLExport int32_t MQTTPacket_encode(unsigned char* buf, size_t length);
 DLLExport int MQTTV5Packet_read(unsigned char* buf, size_t buflen, int (*getfn)(unsigned char*, int));
 typedef struct {
 	int (*getfn)(void *, unsigned char*, int); /* must return -1 for error, 0 for call again, or the number of bytes read */

@@ -20,8 +20,8 @@
 
 struct nameToType
 {
-  enum MQTTPropertyNames name;
-  enum MQTTPropertyTypes type;
+  MQTTPropertyCodes name;
+  MQTTPropertyTypes type;
 } namesToTypes[] =
 {
   {MQTTPROPERTY_CODE_PAYLOAD_FORMAT_INDICATOR, MQTTPROPERTY_TYPE_BYTE},
@@ -31,7 +31,7 @@ struct nameToType
   {MQTTPROPERTY_CODE_CORRELATION_DATA, MQTTPROPERTY_TYPE_BINARY_DATA},
   {MQTTPROPERTY_CODE_SUBSCRIPTION_IDENTIFIER, MQTTPROPERTY_TYPE_VARIABLE_BYTE_INTEGER},
   {MQTTPROPERTY_CODE_SESSION_EXPIRY_INTERVAL, MQTTPROPERTY_TYPE_FOUR_BYTE_INTEGER},
-  {MQTTPROPERTY_CODE_ASSIGNED_CLIENT_IDENTIFER, MQTTPROPERTY_TYPE_UTF_8_ENCODED_STRING},
+  {MQTTPROPERTY_CODE_ASSIGNED_CLIENT_IDENTIFIER, MQTTPROPERTY_TYPE_UTF_8_ENCODED_STRING},
   {MQTTPROPERTY_CODE_SERVER_KEEP_ALIVE, MQTTPROPERTY_TYPE_TWO_BYTE_INTEGER},
   {MQTTPROPERTY_CODE_AUTHENTICATION_METHOD, MQTTPROPERTY_TYPE_UTF_8_ENCODED_STRING},
   {MQTTPROPERTY_CODE_AUTHENTICATION_DATA, MQTTPROPERTY_TYPE_BINARY_DATA},
@@ -54,7 +54,7 @@ struct nameToType
 };
 
 
-int MQTTProperty_getType(int identifier)
+int MQTTProperty_getType(MQTTPropertyCodes identifier)
 {
   int i, rc = -1;
 
@@ -77,7 +77,7 @@ int MQTTProperties_len(const MQTTProperties* props)
 }
 
 
-int MQTTProperties_add(MQTTProperties* props, MQTTProperty* prop)
+int MQTTProperties_add(MQTTProperties* props, const MQTTProperty* prop)
 {
   int rc = 0, type;
 
@@ -152,7 +152,7 @@ int MQTTProperty_write(unsigned char** pptr, MQTTProperty* prop)
         rc = 4;
         break;
       case MQTTPROPERTY_TYPE_VARIABLE_BYTE_INTEGER:
-        rc = MQTTV5Packet_encode(*pptr, prop->value.integer4);
+        rc = MQTTPacket_encode(*pptr, prop->value.integer4);
         break;
       case MQTTPROPERTY_TYPE_BINARY_DATA:
       case MQTTPROPERTY_TYPE_UTF_8_ENCODED_STRING:
@@ -176,13 +176,13 @@ int MQTTProperty_write(unsigned char** pptr, MQTTProperty* prop)
  * @param remlength the max length of the buffer
  * @return whether the write succeeded or not, number of bytes written or < 0
  */
-int MQTTProperties_write(unsigned char** pptr, MQTTProperties* properties)
+int MQTTProperties_write(unsigned char** pptr, const MQTTProperties* properties)
 {
   int rc = -1;
   int i = 0, len = 0;
 
   /* write the entire property list length first */
-  *pptr += MQTTV5Packet_encode(*pptr, properties->length);
+  *pptr += MQTTPacket_encode(*pptr, properties->length);
   len = rc = 1;
   for (i = 0; i < properties->count; ++i)
   {
@@ -199,12 +199,12 @@ int MQTTProperties_write(unsigned char** pptr, MQTTProperties* properties)
 }
 
 
-int MQTTProperty_read(MQTTProperty* prop, unsigned char** pptr, unsigned char* enddata)
+int MQTTProperty_read(MQTTProperty* prop, unsigned char** pptr, const unsigned char* enddata)
 {
   int type = -1,
-    len = 0;
+    len = -1;
 
-  prop->identifier = (unsigned char)readChar(pptr);
+  prop->identifier = (MQTTPropertyCodes)readChar(pptr);
   type = MQTTProperty_getType(prop->identifier);
   if (type >= MQTTPROPERTY_TYPE_BYTE && type <= MQTTPROPERTY_TYPE_UTF_8_STRING_PAIR)
   {
@@ -240,7 +240,7 @@ int MQTTProperty_read(MQTTProperty* prop, unsigned char** pptr, unsigned char* e
 }
 
 
-int MQTTProperties_read(MQTTProperties* properties, unsigned char** pptr, unsigned char* enddata)
+int MQTTProperties_read(MQTTProperties* properties, unsigned char** pptr, const unsigned char* enddata)
 {
   int rc = 0;
   int remlength = 0;

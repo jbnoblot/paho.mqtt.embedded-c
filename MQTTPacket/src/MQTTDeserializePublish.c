@@ -51,7 +51,7 @@ int32_t MQTTDeserialize_publish(unsigned char* dup, unsigned char* qos, unsigned
 	unsigned char* curdata = buf;
 	const unsigned char* enddata = NULL;
 	int32_t rc = 0;
-	int mylen = 0;
+	size_t mylen = 0;
 
 	FUNC_ENTRY;
 	header.byte = readChar(&curdata);
@@ -107,7 +107,7 @@ int32_t MQTTDeserialize_ack(unsigned char* packettype, unsigned char* dup, unsig
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = 0;
-	int32_t mylen;
+	size_t mylen = 0;
 
 	FUNC_ENTRY;
 	header.byte = readChar(&curdata);

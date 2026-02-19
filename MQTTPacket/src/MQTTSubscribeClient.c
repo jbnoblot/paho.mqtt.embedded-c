@@ -155,7 +155,7 @@ int32_t MQTTDeserialize_suback(unsigned short* packetid, int maxcount, int* coun
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = 0;
-	int32_t mylen;
+	size_t mylen = 0;
 
 	FUNC_ENTRY;
 	header.byte = readChar(&curdata);

@@ -50,7 +50,7 @@ int32_t MQTTDeserialize_unsubscribe(unsigned char* dup, unsigned short* packetid
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = 0;
-	int32_t mylen = 0;
+	size_t mylen = 0
 
 	FUNC_ENTRY;
 	header.byte = readChar(&curdata);

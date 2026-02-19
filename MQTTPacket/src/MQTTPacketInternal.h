@@ -22,19 +22,20 @@
 extern "C" {
 #endif
 
-#if defined(WIN32_DLL) || defined(WIN64_DLL)
-  #define DLLImport __declspec(dllimport)
-  #define DLLExport __declspec(dllexport)
-#elif defined(LINUX_SO)
-  #define DLLImport extern
-  #define DLLExport  __attribute__ ((visibility ("default")))
+#if defined(_WIN32) && defined(BUILDING_LIB)
+#define DLLImport __declspec(dllimport)
+#define DLLExport __declspec(dllexport)
+#elif defined(__linux__) || defined(__APPLE__) && defined(BUILDING_LIB)
+#define DLLImport extern
+#define DLLExport __attribute__((visibility("default")))
 #else
-  #define DLLImport
-  #define DLLExport
+#define DLLImport
+#define DLLExport
 #endif
 
 enum errors
 {
+	MQTTPACKET_BAD = -4,
 	MQTTPACKET_BUFFER_TOO_SHORT = -2,
 	MQTTPACKET_READ_ERROR = -1,
 	MQTTPACKET_READ_COMPLETE
@@ -88,10 +89,10 @@ typedef struct
 
 int MQTTstrlen(const MQTTString* mqttstring);
 
-int32_t MQTTPacket_VBIlen(size_t rem_len);
+int MQTTPacket_VBIlen(size_t rem_len);
 size_t MQTTPacket_len(size_t rem_len);
-int32_t MQTTPacket_decode(int (*getcharfn)(unsigned char*, int), int32_t* value);
-int32_t MQTTPacket_decodeBuf(unsigned char* buf, int32_t* value);
+int MQTTPacket_decode(int (*getcharfn)(unsigned char*, int), size_t* value);
+int MQTTPacket_decodeBuf(unsigned char* buf, size_t* value);
 
 int readInt(unsigned char** pptr);
 char readChar(unsigned char** pptr);
@@ -101,11 +102,7 @@ int readMQTTLenString(MQTTString* mqttstring, unsigned char** pptr, const unsign
 void writeCString(unsigned char** pptr, const char* string);
 void writeMQTTString(unsigned char** pptr, const MQTTString* mqttstring);
 
-#if defined(MQTTV5)
-#define MQTTPacket_encode_internal MQTTV5Packet_encode
-#else
 #define MQTTPacket_encode_internal MQTTPacket_encode
-#endif
 
 #ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
 }

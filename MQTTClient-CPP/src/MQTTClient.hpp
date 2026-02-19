@@ -918,7 +918,7 @@ int MQTT::Client<Network, Timer, MAX_MQTT_PACKET_SIZE, MAX_MESSAGE_HANDLERS>::pr
     if (!isconnected)
         goto exit;
 
-    len = MQTTSerialize_subscribe(sendbuf, MAX_MQTT_PACKET_SIZE, 0, packetid.getNext(), 1, &topic, &qos);
+    len = MQTTSerialize_subscribe(sendbuf, MAX_MQTT_PACKET_SIZE, 0, packetid.getNext(), 1, &topic, (unsigned char*)&qos);
     if (len <= 0)
         goto exit;
     if ((rc = sendPacket(len, timer)) != SUCCESS) // send the subscribe packet
@@ -1087,8 +1087,8 @@ int MQTT::Client<Network, Timer, MAX_MQTT_PACKET_SIZE, b>::publish(const char* t
         id = packetid.getNext();
 #endif
 
-    len = MQTTSerialize_publish(sendbuf, MAX_MQTT_PACKET_SIZE, 0, qos, retained, id,
-              &topicString, payload, payloadlen);
+    len = MQTTSerialize_publish(sendbuf, MAX_MQTT_PACKET_SIZE, 0, (unsigned char)qos, retained, id,
+              &topicString, (unsigned char*)payload, payloadlen);
     if (len <= 0)
         goto exit;
 

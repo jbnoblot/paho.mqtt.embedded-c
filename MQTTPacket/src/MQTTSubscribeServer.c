@@ -51,7 +51,7 @@ int32_t MQTTDeserialize_subscribe(unsigned char* dup, unsigned short* packetid, 
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = MQTTPACKET_READ_ERROR;
-	int32_t mylen = 0;
+	size_t mylen = 0;
 
 	FUNC_ENTRY;
 	header.byte = readChar(&curdata);
