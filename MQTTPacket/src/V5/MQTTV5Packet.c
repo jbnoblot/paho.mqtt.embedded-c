@@ -60,7 +60,7 @@ void writeMQTTLenString(unsigned char** pptr, const MQTTLenString* lenstring)
 }
 
 
-int MQTTLenStringRead(MQTTLenString* lenstring, unsigned char** pptr, const unsigned char* enddata)
+int MQTTLenStringRead(MQTTLenString* lenstring, unsigned char** pptr, const unsigned char* const enddata)
 {
 	int len = -1;
 

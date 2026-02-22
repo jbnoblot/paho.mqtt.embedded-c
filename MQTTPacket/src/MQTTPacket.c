@@ -64,7 +64,7 @@ int32_t MQTTPacket_encode(unsigned char* buf, size_t length)
  * @param value the decoded length returned
  * @return the number of bytes read from the socket
  */
-int MQTTPacket_decode(int (*getcharfn)(unsigned char*, int), size_t* value)
+int MQTTPacket_decode(int (*getcharfn)(unsigned char*, int), uint32_t* value)
 {
 	int rc = MQTTPACKET_READ_ERROR;
 	unsigned char c;
@@ -94,7 +94,7 @@ exit:
 }
 
 
-int32_t MQTTPacket_VBIlen(size_t rem_len)
+int32_t MQTTPacket_VBIlen(uint32_t rem_len)
 {
 	int32_t rc = 0;
 
@@ -110,7 +110,7 @@ int32_t MQTTPacket_VBIlen(size_t rem_len)
 }
 
 
-size_t MQTTPacket_len(size_t rem_len)
+size_t MQTTPacket_len(uint32_t rem_len)
 {
 	/* header byte + remaining length */
 	return rem_len + 1 + MQTTPacket_VBIlen(rem_len);
@@ -129,7 +129,7 @@ int bufchar(unsigned char* c, int count)
 }
 
 
-int MQTTPacket_decodeBuf(unsigned char* buf, size_t* value)
+int MQTTPacket_decodeBuf(unsigned char* buf, uint32_t* value)
 {
 	bufptr = buf;
 	return MQTTPacket_decode(bufchar, value);
@@ -251,10 +251,12 @@ void writeMQTTString(unsigned char** pptr, const MQTTString* mqttstring)
 		memcpy(*pptr, mqttstring->lenstring.data, mqttstring->lenstring.len);
 		*pptr += mqttstring->lenstring.len;
 	}
-	else if (mqttstring->cstring) {
+	else if (mqttstring->cstring)
+	{
 		writeCString(pptr, mqttstring->cstring);
 	}
-	else {
+	else
+	{
 		writeInt(pptr, 0);
 	}
 }

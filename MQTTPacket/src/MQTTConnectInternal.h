@@ -31,6 +31,8 @@
 #define MQTT_CONNECT_USERNAME_MASK     0x80 // Bit 7
 
 #define MQTT_CONNACK_SESSION_PRESENT_MASK 0x01
+#define MQTT_CONNACK_SESSION_PRESENT_SHIFT 0
+
 typedef union
 {
 	unsigned char all; /**< all connack flags */
@@ -48,5 +50,6 @@ typedef union
 	} bits;
 #endif
 } MQTTConnackFlags; /**< connack flags byte */
+
 
 #endif /* MQTTCONNECTINTERNAL_H_ */

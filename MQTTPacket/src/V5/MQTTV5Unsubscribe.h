@@ -37,7 +37,7 @@ DLLExport int32_t MQTTV5Deserialize_unsuback(unsigned short* packetid, MQTTPrope
   int maxcount, int* count, unsigned char* reasonCodes, unsigned char* buf, size_t buflen);
 
 int MQTTV5Deserialize_subunsuback(int type, unsigned short* packetid, MQTTProperties* properties,
-  int maxcount, int* count, unsigned char* reasonCodes, const unsigned char* buf, size_t buflen);
+  int maxcount, int* count, unsigned char* reasonCodes, unsigned char* buf, size_t buflen);
 
 
 #endif /* MQTTV5UNSUBSCRIBE_H_ */

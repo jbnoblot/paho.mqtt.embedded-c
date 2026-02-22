@@ -53,12 +53,12 @@ size_t MQTTSerialize_connectLength(MQTTPacket_connectData* options)
 #if defined(MQTTV5)
   if (options->MQTTVersion >= 5)
 	{
-    if (connectProperties) {
-	    len += MQTTProperties_len(connectProperties);
-	}
-	if (options->willFlag && options->will.properties) {
-		len += MQTTProperties_len(options->will.properties);
-	}
+		if (connectProperties) {
+			len += MQTTProperties_len(connectProperties);
+		}
+		if (options->willFlag && options->will.properties) {
+			len += MQTTProperties_len(options->will.properties);
+		}
 	}
 #endif
 
@@ -181,7 +181,7 @@ int MQTTDeserialize_connack(unsigned char* sessionPresent, unsigned char* connac
 	unsigned char* curdata = buf;
 	const unsigned char* enddata = NULL;
 	int rc = 0;
-	size_t mylen = 0;
+	uint32_t mylen = 0;
 	unsigned char flags = 0;
 
 	FUNC_ENTRY;

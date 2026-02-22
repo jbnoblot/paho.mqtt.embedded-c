@@ -129,7 +129,7 @@ int MQTTProperties_add(MQTTProperties* props, const MQTTProperty* prop)
 }
 
 
-int MQTTProperty_write(unsigned char** pptr, MQTTProperty* prop)
+int MQTTProperty_write(unsigned char** pptr, const MQTTProperty* prop)
 {
   int rc = -1;
   int type = MQTTProperty_getType(prop->identifier);
@@ -168,7 +168,7 @@ int MQTTProperty_write(unsigned char** pptr, MQTTProperty* prop)
   }
   if (rc < 0) {
     return -1; /* error */
-  } 
+  }
   return rc + 1; /* include identifier byte */
 }
 

@@ -143,17 +143,17 @@ int32_t MQTTV5Deserialize_suback(unsigned short* packetid, MQTTProperties* prope
 }
 
 int32_t MQTTV5Deserialize_subunsuback(int type, unsigned short* packetid, MQTTProperties* properties,
-	  int maxcount, int* count, unsigned char* reasonCodes, const unsigned char* buf, size_t buflen)
+	  int maxcount, int* count, unsigned char* reasonCodes, unsigned char* buf, size_t buflen)
 #else
 int32_t MQTTDeserialize_suback(unsigned short* packetid, int maxcount, int* count, unsigned char grantedQoSs[],
-	const unsigned char* buf, size_t buflen)
+	unsigned char* buf, size_t buflen)
 #endif
 {
 	unsigned char header;
-	const unsigned char* curdata = buf;
+	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = 0;
-	size_t mylen = 0;
+	uint32_t mylen = 0;
 
 	FUNC_ENTRY;
 	header = readChar(&curdata);

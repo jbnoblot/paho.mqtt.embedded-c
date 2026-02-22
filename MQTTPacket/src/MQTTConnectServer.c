@@ -81,7 +81,7 @@ int32_t MQTTDeserialize_connect(MQTTPacket_connectData* data, unsigned char* buf
 	unsigned char* enddata = &buf[len];
 	int32_t rc = 0;
 	MQTTString Protocol;
-	size_t mylen = 0;
+	uint32_t mylen = 0;
 
 	FUNC_ENTRY;
 	header = readChar(&curdata);
@@ -172,7 +172,7 @@ int32_t MQTTSerialize_connack(unsigned char* buf, size_t buflen, unsigned char c
 	unsigned char header;
 	int32_t rc = 0;
 	unsigned char *ptr = buf;
-	MQTTConnackFlags flags = {0};
+	unsigned char flags = 0;
 	int32_t len = 0;
 
 	FUNC_ENTRY;
@@ -194,9 +194,9 @@ int32_t MQTTSerialize_connack(unsigned char* buf, size_t buflen, unsigned char c
 
 	ptr += MQTTPacket_encode_internal(ptr, len); /* write remaining length */
 
-	flags.all = 0;
-	flags.bits.sessionpresent = sessionPresent;
-	writeChar(&ptr, flags.all);
+	flags = 0;
+	flags |= (sessionPresent << MQTT_CONNACK_SESSION_PRESENT_SHIFT);
+	writeChar(&ptr, flags);
 	writeChar(&ptr, connack_rc);
 
 #if defined(MQTTV5)
@@ -219,7 +219,7 @@ int32_t MQTTV5Deserialize_zero(unsigned char packettype, MQTTProperties* propert
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = 0;
-	size_t mylen = 0;
+	uint32_t mylen = 0;
 
 	FUNC_ENTRY;
 	header = readChar(&curdata);
