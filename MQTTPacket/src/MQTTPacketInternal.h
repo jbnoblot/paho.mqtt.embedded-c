@@ -48,6 +48,18 @@ enum msgTypes
 	PINGREQ, PINGRESP, DISCONNECT, AUTH
 };
 
+// Masques
+#define MQTT_HEADER_TYPE_MASK   0xF0
+#define MQTT_HEADER_DUP_MASK    0x08
+#define MQTT_HEADER_QOS_MASK    0x06
+#define MQTT_HEADER_RETAIN_MASK 0x01
+
+// Décalages (pour ramener les valeurs à 0)
+#define MQTT_HEADER_TYPE_SHIFT		4
+#define MQTT_HEADER_DUP_SHIFT		3 //TODO NOT SURE
+#define MQTT_HEADER_RETAIN_SHIFT	0
+#define MQTT_HEADER_QOS_SHIFT		1
+
 /**
  * Bitfields for the MQTT header byte.
  */
@@ -95,7 +107,7 @@ int MQTTPacket_decode(int (*getcharfn)(unsigned char*, int), size_t* value);
 int MQTTPacket_decodeBuf(unsigned char* buf, size_t* value);
 
 int readInt(unsigned char** pptr);
-char readChar(unsigned char** pptr);
+char readChar(unsigned char* *pptr);
 void writeChar(unsigned char** pptr, char c);
 void writeInt(unsigned char** pptr, int anInt);
 int readMQTTLenString(MQTTString* mqttstring, unsigned char** pptr, const unsigned char* enddata);

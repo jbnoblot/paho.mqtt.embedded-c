@@ -30,7 +30,7 @@ public:
         countdown_ms(ms);   
     }
     
-    bool expired()
+    bool expired() const
     {
         return (interval_end_ms > 0L) && (millis() >= interval_end_ms);
     }
@@ -45,7 +45,7 @@ public:
         countdown_ms((unsigned long)seconds * 1000L);
     }
     
-    int left_ms()
+    int left_ms() const
     {
         return interval_end_ms - millis();
     }

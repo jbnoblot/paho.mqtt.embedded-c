@@ -50,10 +50,10 @@ int test_v5(struct Options options)
 	data.username.cstring = "testuser";
 	data.password.cstring = "testpassword";
 	data.MQTTVersion = 5;
-
+/*
 	properties.max_count = 10;
 	properties.array = props;
-
+*/
 	one.identifier = MQTTPROPERTY_CODE_SESSION_EXPIRY_INTERVAL;
 	one.value.integer4 = 45;
 	rc = MQTTProperties_add(&properties, &one);

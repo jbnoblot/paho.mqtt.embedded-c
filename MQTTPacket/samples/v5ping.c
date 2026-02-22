@@ -73,8 +73,7 @@ int main(int argc, char *argv[])
 	int port = 1884;
 	MQTTProperty connack_properties_array[5];
 	MQTTProperties connack_properties = MQTTProperties_initializer;
-
-	connack_properties.array = connack_properties_array;
+	//connack_properties.array = connack_properties_array;
 	connack_properties.max_count = 5;
 
 	stop_init();

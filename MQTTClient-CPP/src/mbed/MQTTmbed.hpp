@@ -34,7 +34,7 @@ public:
     }
 
 
-    bool expired()
+    bool expired() const
     {
         return t.read_ms() >= interval_end_ms;
     }
@@ -52,7 +52,7 @@ public:
         countdown_ms((unsigned long)seconds * 1000L);
     }
 
-    int left_ms()
+    int left_ms() const
     {
         return interval_end_ms - t.read_ms();
     }

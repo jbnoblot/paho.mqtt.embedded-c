@@ -78,15 +78,16 @@ typedef struct
   } value;
 } MQTTProperty;
 
+#define MQTT_MAX_PROPERTIES 8
 typedef struct MQTTProperties
 {
   int count;           /**< number of property entries in the array */
   int max_count;       /**< max number of properties that the currently allocated array can store */
   int length;          /**< mbi: byte length of all properties */
-  MQTTProperty *array; /**< array of properties */
+  MQTTProperty array[MQTT_MAX_PROPERTIES]; /**< array of properties */
 } MQTTProperties;
 
-#define MQTTProperties_initializer {0, 0, 0, NULL}
+#define MQTTProperties_initializer {0, MQTT_MAX_PROPERTIES, 0, {0}}
 
 DLLExport int MQTTProperties_len(const MQTTProperties* props);
 

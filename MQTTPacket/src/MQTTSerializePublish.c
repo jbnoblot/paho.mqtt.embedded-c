@@ -75,8 +75,7 @@ int32_t MQTTSerialize_publish(unsigned char* buf, size_t buflen, unsigned char d
 #endif
 {
 	unsigned char *ptr = buf;
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	int32_t rem_len = 0;
 	int32_t rc = 0;
 
@@ -91,19 +90,20 @@ int32_t MQTTSerialize_publish(unsigned char* buf, size_t buflen, unsigned char d
 		goto exit;
 	}
 
-	header.bits.type = PUBLISH;
-	header.bits.dup = dup;
-	header.bits.qos = qos;
-	header.bits.retain = retained;
-	writeChar(&ptr, header.byte); /* write header */
+	header = 0;
+	header |= (PUBLISH << MQTT_HEADER_TYPE_SHIFT);
+	header |= (dup << MQTT_HEADER_DUP_SHIFT);
+	header |= (qos << MQTT_HEADER_QOS_SHIFT);
+	header |= (retained << MQTT_HEADER_RETAIN_SHIFT);
+	writeChar(&ptr, header); /* write header */
 
 	ptr += MQTTPacket_encode_internal(ptr, rem_len); /* write remaining length */;
 
 	writeMQTTString(&ptr, topicName);
 
-	if (qos > 0)
+	if (qos > 0) {
 		writeInt(&ptr, packetid);
-
+	}
 #if defined(MQTTV5)
   if (properties && MQTTProperties_write(&ptr, properties) < 0)
 		goto exit;
@@ -137,8 +137,7 @@ int32_t MQTTV5Serialize_ack(unsigned char* buf, size_t buflen, unsigned char pac
 int32_t MQTTSerialize_ack(unsigned char* buf, size_t buflen, unsigned char packettype, unsigned char dup, unsigned short packetid)
 #endif
 {
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	int32_t rc = 0;
 	unsigned char *ptr = buf;
 	int32_t len = 2;
@@ -157,20 +156,22 @@ int32_t MQTTSerialize_ack(unsigned char* buf, size_t buflen, unsigned char packe
 		rc = MQTTPACKET_BUFFER_TOO_SHORT;
 		goto exit;
 	}
-	header.bits.type = packettype;
-	header.bits.dup = dup;
-	header.bits.qos = (packettype == PUBREL) ? 1 : 0;
-	writeChar(&ptr, header.byte); /* write header */
+	header = 0;
+	header |= (packettype << MQTT_HEADER_TYPE_SHIFT);
+	header |= (dup << MQTT_HEADER_DUP_SHIFT);
+	header |= ((packettype == PUBREL) ? 1 : 0) << MQTT_HEADER_QOS_SHIFT;
+	writeChar(&ptr, header); /* write header */
 
 	ptr += MQTTPacket_encode_internal(ptr, len); /* write remaining length */
 	writeInt(&ptr, packetid);
 
 #if defined(MQTTV5)
-  if (reasonCode >= 0)
+	if (reasonCode >= 0)
 	{
 		writeChar(&ptr, reasonCode);
-    if (properties && MQTTProperties_write(&ptr, properties) < 0)
+    	if (properties && MQTTProperties_write(&ptr, properties) < 0) {
 		  goto exit;
+		}
 	}
 #endif
 

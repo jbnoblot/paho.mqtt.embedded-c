@@ -46,18 +46,17 @@ int32_t MQTTDeserialize_subscribe(unsigned char* dup, unsigned short* packetid, 
 	unsigned char requestedQoSs[], unsigned char* buf, size_t buflen)
 #endif
 {
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = MQTTPACKET_READ_ERROR;
 	size_t mylen = 0;
 
 	FUNC_ENTRY;
-	header.byte = readChar(&curdata);
-	if (header.bits.type != SUBSCRIBE)
+	header = readChar(&curdata);
+	if ((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT != SUBSCRIBE)
 		goto exit;
-	*dup = header.bits.dup;
+	*dup = (header & MQTT_HEADER_DUP_MASK) >> MQTT_HEADER_DUP_SHIFT;
 
 	rc = MQTTPacket_decodeBuf(curdata, &mylen); /* read remaining length */
 	if (rc <= 0)
@@ -118,8 +117,7 @@ int32_t MQTTV5Serialize_suback(unsigned char* buf, size_t buflen, unsigned short
 int32_t MQTTSerialize_suback(unsigned char* buf, size_t buflen, unsigned short packetid, int count, const unsigned char* grantedQoSs)
 #endif
 {
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	int32_t rc = -1;
 	unsigned char *ptr = buf;
 	int i;
@@ -136,9 +134,9 @@ int32_t MQTTSerialize_suback(unsigned char* buf, size_t buflen, unsigned short p
 		rc = MQTTPACKET_BUFFER_TOO_SHORT;
 		goto exit;
 	}
-	header.byte = 0;
-	header.bits.type = SUBACK;
-	writeChar(&ptr, header.byte); /* write header */
+	header = 0;
+	header |= (SUBACK << MQTT_HEADER_TYPE_SHIFT);
+	writeChar(&ptr, header); /* write header */
 
 	ptr += MQTTPacket_encode_internal(ptr, len); /* write remaining length */
 

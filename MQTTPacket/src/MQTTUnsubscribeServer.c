@@ -45,18 +45,17 @@ int32_t MQTTDeserialize_unsubscribe(unsigned char* dup, unsigned short* packetid
 	unsigned char* buf, size_t buflen)
 #endif
 {
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = 0;
 	size_t mylen = 0
 
 	FUNC_ENTRY;
-	header.byte = readChar(&curdata);
-	if (header.bits.type != UNSUBSCRIBE)
+	header = readChar(&curdata);
+	if ((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT != UNSUBSCRIBE)
 		goto exit;
-	*dup = header.bits.dup;
+	*dup = (header & MQTT_HEADER_DUP_MASK) >> MQTT_HEADER_DUP_SHIFT;
 
 	curdata += (rc = MQTTPacket_decodeBuf(curdata, &mylen)); /* read remaining length */
 	enddata = curdata + mylen;
@@ -102,8 +101,7 @@ int32_t MQTTV5Serialize_unsuback(unsigned char* buf, size_t buflen, unsigned sho
 int32_t MQTTSerialize_unsuback(unsigned char* buf, size_t buflen, unsigned short packetid)
 #endif
 {
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	int32_t rc = 0;
 	unsigned char *ptr = buf;
 	int32_t len = 2;
@@ -122,9 +120,9 @@ int32_t MQTTSerialize_unsuback(unsigned char* buf, size_t buflen, unsigned short
 		rc = MQTTPACKET_BUFFER_TOO_SHORT;
 		goto exit;
 	}
-	header.byte = 0;
-	header.bits.type = UNSUBACK;
-	writeChar(&ptr, header.byte); /* write header */
+	header = 0;
+	header |= (UNSUBACK << MQTT_HEADER_TYPE_SHIFT);
+	writeChar(&ptr, header); /* write header */
 
 	ptr += MQTTPacket_encode_internal(ptr, len); /* write remaining length */
 
@@ -134,10 +132,11 @@ int32_t MQTTSerialize_unsuback(unsigned char* buf, size_t buflen, unsigned short
 	if (properties && MQTTProperties_write(&ptr, properties) < 0)
 		goto exit;
 
-  if (reasonCodes)
+	if (reasonCodes)
 	{
-    for (i = 0; i < count; ++i)
-	    writeChar(&ptr, reasonCodes[i]);
+		for (i = 0; i < count; ++i) {
+			writeChar(&ptr, reasonCodes[i]);
+		}
 	}
 #endif
 

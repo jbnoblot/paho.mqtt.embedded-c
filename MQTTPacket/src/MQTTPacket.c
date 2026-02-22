@@ -48,8 +48,9 @@ int32_t MQTTPacket_encode(unsigned char* buf, size_t length)
 		char d = length % 128;
 		length /= 128;
 		/* if there are more digits to encode, set the top bit of this digit */
-		if (length > 0)
+		if (length > 0) {
 			d |= 0x80;
+		}
 		buf[rc++] = d;
 	} while (length > 0);
 	FUNC_EXIT_RC(rc);
@@ -121,8 +122,9 @@ int bufchar(unsigned char* c, int count)
 {
 	int i;
 
-	for (i = 0; i < count; ++i)
+	for (i = 0; i < count; ++i) {
 		*c = *bufptr++;
+	}
 	return count;
 }
 
@@ -184,6 +186,47 @@ void writeInt(unsigned char** pptr, int anInt)
 	(*pptr)++;
 	**pptr = (unsigned char)(anInt % 256);
 	(*pptr)++;
+}
+
+// 1. Détection de l'endianness (souvent fournie par le compilateur)
+#ifndef __BYTE_ORDER__
+    #if defined(__ARMEL__) || defined(__LITTLE_ENDIAN__) || defined(_WIN32)
+        #define __BYTE_ORDER__ __ORDER_LITTLE_ENDIAN__
+    #endif
+#endif
+
+// --- HTONS (16-bit) ---
+static inline uint16_t my_htons(uint16_t v) {
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    return v; // Déjà au bon format
+#elif defined(__GNUC__) || defined(__clang__)
+    return __builtin_bswap16(v); // Utilise l'instruction REV sur ARM
+#else
+    return (uint16_t)((v << 8) | (v >> 8)); // Fallback bitwise
+#endif
+}
+
+// --- HTONL (32-bit) ---
+static inline uint32_t my_htonl(uint32_t v) {
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    return v;
+#elif defined(__GNUC__) || defined(__clang__)
+    return __builtin_bswap32(v); // Utilise l'instruction REV sur ARM
+#else
+    return ((v & 0x000000FFUL) << 24) |
+           ((v & 0x0000FF00UL) << 8)  |
+           ((v & 0x00FF0000UL) >> 8)  |
+           ((v & 0xFF000000UL) >> 24);
+#endif
+}
+
+void writeUInt16(unsigned char** pptr, uint16_t anInt)
+{
+    // __builtin_bswap16 fait le swap MSB/LSB instantanément (instruction REV16)
+    uint16_t networkOrder = my_htons(anInt);
+    
+    memcpy(*pptr, &networkOrder, 2);
+    *pptr += 2;
 }
 
 
@@ -270,8 +313,8 @@ int MQTTstrlen(const MQTTString* mqttstring)
  */
 int MQTTPacket_equals(const MQTTString* a, char* bptr)
 {
-	size_t alen = 0,
-		blen = 0;
+	size_t alen = 0;
+	size_t blen = 0;
 	char *aptr;
 
 	if (a->cstring)
@@ -305,14 +348,14 @@ int MQTTPacket_read(unsigned char* buf, size_t buflen, int (*getfn)(unsigned cha
 #endif
 {
 	int rc = -1;
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	int32_t len = 0;
-	int rem_len = 0;
+	size_t rem_len = 0;
 
 	/* 1. read the header byte.  This has the packet type in it */
-	if ((*getfn)(buf, 1) != 1)
+	if ((*getfn)(buf, 1) != 1) {
 		goto exit;
+	}
 
 	len = 1;
 	/* 2. read the remaining length.  This is variable in itself */
@@ -320,13 +363,15 @@ int MQTTPacket_read(unsigned char* buf, size_t buflen, int (*getfn)(unsigned cha
 	len += MQTTPacket_encode(buf + 1, rem_len); /* put the original remaining length back into the buffer */
 
 	/* 3. read the rest of the buffer using a callback to supply the rest of the data */
-	if((rem_len + len) > buflen)
+	if((rem_len + len) > buflen) {
 		goto exit;
-	if (rem_len && ((*getfn)(buf + len, rem_len) != rem_len))
+	}
+	if (rem_len && ((*getfn)(buf + len, rem_len) != rem_len)) {
 		goto exit;
+	}
 
-	header.byte = buf[0];
-	rc = header.bits.type;
+	header = buf[0];
+	rc = (header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT;
 exit:
 	return rc;
 }
@@ -385,9 +430,9 @@ int MQTTV5Packet_readnb(unsigned char* buf, size_t buflen, MQTTV5Transport *trp)
 int MQTTPacket_readnb(unsigned char* buf, size_t buflen, MQTTTransport *trp)
 #endif
 {
-	int rc = -1, frc;
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	int rc = -1;
+	int frc;
+	unsigned char header;
 
 	switch(trp->state){
 	default:
@@ -431,8 +476,8 @@ int MQTTPacket_readnb(unsigned char* buf, size_t buflen, MQTTTransport *trp)
 			if(trp->rem_len)
 				return 0;
 		}
-		header.byte = buf[0];
-		rc = header.bits.type;
+		header = buf[0];
+		rc = (header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT;
 		break;
 	}
 

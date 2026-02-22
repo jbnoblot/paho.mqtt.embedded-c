@@ -29,7 +29,7 @@
   * @return the length of buffer needed to contain the serialized version of the packet
   */
 #if defined(MQTTV5)
-size_t MQTTV5Serialize_connectLength(MQTTV5Packet_connectData* options, MQTTProperties* connectProperties)
+size_t MQTTV5Serialize_connectLength(MQTTV5Packet_connectData* options, const MQTTProperties* connectProperties)
 #else
 size_t MQTTSerialize_connectLength(MQTTPacket_connectData* options)
 #endif
@@ -53,10 +53,12 @@ size_t MQTTSerialize_connectLength(MQTTPacket_connectData* options)
 #if defined(MQTTV5)
   if (options->MQTTVersion >= 5)
 	{
-    if (connectProperties)
+    if (connectProperties) {
 	    len += MQTTProperties_len(connectProperties);
-	  if (options->willFlag && options->will.properties)
-		  len += MQTTProperties_len(options->will.properties);
+	}
+	if (options->willFlag && options->will.properties) {
+		len += MQTTProperties_len(options->will.properties);
+	}
 	}
 #endif
 
@@ -73,15 +75,14 @@ size_t MQTTSerialize_connectLength(MQTTPacket_connectData* options)
   */
 #if defined(MQTTV5)
 int MQTTV5Serialize_connect(unsigned char* buf, size_t buflen, MQTTV5Packet_connectData* options,
-  MQTTProperties* connectProperties)
+  const MQTTProperties* connectProperties)
 #else
 int MQTTSerialize_connect(unsigned char* buf, size_t buflen, MQTTPacket_connectData* options)
 #endif
 {
 	unsigned char *ptr = buf;
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
-	MQTTConnectFlags flags = {0};
+	unsigned char header = 0;
+	unsigned char flags = 0;
 	size_t len = 0;
 	int rc = -1;
 
@@ -97,9 +98,8 @@ int MQTTSerialize_connect(unsigned char* buf, size_t buflen, MQTTPacket_connectD
 		goto exit;
 	}
 
-	header.byte = 0;
-	header.bits.type = CONNECT;
-	writeChar(&ptr, header.byte); /* write header */
+	header |= (CONNECT << MQTT_HEADER_TYPE_SHIFT);
+	writeChar(&ptr, header); /* write header */
 
 	ptr += MQTTPacket_encode_internal(ptr, len); /* write remaining length */
 
@@ -111,26 +111,26 @@ int MQTTSerialize_connect(unsigned char* buf, size_t buflen, MQTTPacket_connectD
 	  goto exit;
 	writeChar(&ptr, (char)options->MQTTVersion);
 
-	flags.all = 0;
+	flags = 0;
 #if defined(MQTTV5)
-	flags.bits.cleansession = options->cleanstart;
+	flags |= (options->cleanstart << 1); /* bit 1 is clean start */
 #else
-	flags.bits.cleansession = options->cleansession;
+	flags |= (options->cleansession << 1); /* bit 1 is clean start */
 #endif
 
-	flags.bits.will = (options->willFlag) ? 1 : 0;
-	if (flags.bits.will)
+	flags |= (options->willFlag << 2); /* bit 2 is will flag */
+	if (flags & 0x04) /* if will flag is set */
 	{
-		flags.bits.willQoS = options->will.qos;
-		flags.bits.willRetain = options->will.retained;
+		flags |= (options->will.qos << 3); /* bits 3-4 are will QoS */
+		flags |= (options->will.retained << 5); /* bit 5 is will retained */
 	}
 
 	if (options->username.cstring || options->username.lenstring.data)
-		flags.bits.username = 1;
+		flags |= (1 << 6); /* bit 6 is username flag */
 	if (options->password.cstring || options->password.lenstring.data)
-		flags.bits.password = 1;
+		flags |= (1 << 7); /* bit 7 is password flag */
 
-	writeChar(&ptr, flags.all);
+	writeChar(&ptr, flags);
 	writeInt(&ptr, options->keepAliveInterval);
 #if defined(MQTTV5)
 	if (options->MQTTVersion == 5)
@@ -148,10 +148,10 @@ int MQTTSerialize_connect(unsigned char* buf, size_t buflen, MQTTPacket_connectD
 		writeMQTTString(&ptr, &options->will.topicName);
 		writeMQTTString(&ptr, &options->will.message);
 	}
-	if (flags.bits.username) {
+	if (flags & MQTT_CONNECT_USERNAME_MASK) {
 		writeMQTTString(&ptr, &options->username);
 	}
-	if (flags.bits.password) {
+	if (flags & MQTT_CONNECT_PASSWORD_MASK) {
 		writeMQTTString(&ptr, &options->password);
 	}
 
@@ -177,17 +177,16 @@ int MQTTV5Deserialize_connack(MQTTProperties* connackProperties, unsigned char* 
 int MQTTDeserialize_connack(unsigned char* sessionPresent, unsigned char* connack_rc, unsigned char* buf, size_t buflen)
 #endif
 {
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	unsigned char* curdata = buf;
-	unsigned char* enddata = NULL;
+	const unsigned char* enddata = NULL;
 	int rc = 0;
 	size_t mylen = 0;
-	MQTTConnackFlags flags = {0};
+	unsigned char flags = 0;
 
 	FUNC_ENTRY;
-	header.byte = readChar(&curdata);
-	if (header.bits.type != CONNACK)
+	header = readChar(&curdata);
+	if (((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT) != CONNACK)
 		goto exit;
 
 	curdata += (rc = MQTTPacket_decodeBuf(curdata, &mylen)); /* read remaining length */
@@ -195,8 +194,8 @@ int MQTTDeserialize_connack(unsigned char* sessionPresent, unsigned char* connac
 	if (enddata - curdata < 2)
 		goto exit;
 
-	flags.all = readChar(&curdata);
-	*sessionPresent = flags.bits.sessionpresent;
+	flags = readChar(&curdata);
+	*sessionPresent = flags & MQTT_CONNACK_SESSION_PRESENT_MASK;
 	*connack_rc = readChar(&curdata);
 
 #if defined(MQTTV5)
@@ -220,13 +219,12 @@ exit:
   */
 #if defined(MQTTV5)
 int MQTTV5Serialize_zero(unsigned char* buf, size_t buflen, unsigned char packettype,
- unsigned char reasonCode, MQTTProperties* properties)
+ unsigned char reasonCode, const MQTTProperties* properties)
 #else
 int MQTTSerialize_zero(unsigned char* buf, size_t buflen, unsigned char packettype)
 #endif
 {
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	int rc = -1;
 	unsigned char *ptr = buf;
 	int32_t len = 0;
@@ -236,8 +234,9 @@ int MQTTSerialize_zero(unsigned char* buf, size_t buflen, unsigned char packetty
 	if (reasonCode >= 0 && reasonCode <= 162)
 	{
 		len += 1;
-		if (properties)
+		if (properties) {
 			len += MQTTProperties_len(properties);
+		}
 	}
 #endif
 	if (MQTTPacket_len(len) > buflen)
@@ -245,9 +244,9 @@ int MQTTSerialize_zero(unsigned char* buf, size_t buflen, unsigned char packetty
 		rc = MQTTPACKET_BUFFER_TOO_SHORT;
 		goto exit;
 	}
-	header.byte = 0;
-	header.bits.type = packettype;
-	writeChar(&ptr, header.byte); /* write header */
+	header = 0;
+	header |= (packettype << MQTT_HEADER_TYPE_SHIFT);
+	writeChar(&ptr, header); /* write header */
 
 	ptr += MQTTPacket_encode_internal(ptr, len); /* write remaining length */
 #if defined(MQTTV5)
@@ -273,7 +272,7 @@ exit:
   */
 #if defined(MQTTV5)
 int MQTTV5Serialize_disconnect(unsigned char* buf, size_t buflen,
-	            unsigned char reasonCode, MQTTProperties* properties)
+	            unsigned char reasonCode, const MQTTProperties* properties)
 #else
 int MQTTSerialize_disconnect(unsigned char* buf, size_t buflen)
 #endif
@@ -288,7 +287,7 @@ int MQTTSerialize_disconnect(unsigned char* buf, size_t buflen)
 
 #if defined(MQTTV5)
 int MQTTV5Serialize_auth(unsigned char* buf, size_t buflen,
-	            unsigned char reasonCode, MQTTProperties* properties)
+	            unsigned char reasonCode, const MQTTProperties* properties)
 {
   return MQTTV5Serialize_zero(buf, buflen, AUTH, reasonCode, properties);
 }

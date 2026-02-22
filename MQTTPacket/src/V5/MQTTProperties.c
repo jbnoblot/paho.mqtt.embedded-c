@@ -56,9 +56,9 @@ struct nameToType
 
 int MQTTProperty_getType(MQTTPropertyCodes identifier)
 {
-  int i, rc = -1;
+  int rc = -1;
 
-  for (i = 0; i < ARRAY_SIZE(namesToTypes); ++i)
+  for (int i = 0; i < ARRAY_SIZE(namesToTypes); ++i)
   {
     if (namesToTypes[i].name == identifier)
     {
@@ -73,13 +73,14 @@ int MQTTProperty_getType(MQTTPropertyCodes identifier)
 int MQTTProperties_len(const MQTTProperties* props)
 {
   /* properties length is an mbi */
-  return props->length + MQTTPacket_VBIlen(props->length);
+  return (props == NULL) ? 1 : props->length + MQTTPacket_VBIlen(props->length);
 }
 
 
 int MQTTProperties_add(MQTTProperties* props, const MQTTProperty* prop)
 {
-  int rc = 0, type;
+  int rc = 0;
+  int type;
 
   if (props->count >= props->max_count)
     rc = -1;  /* max number of properties already in structure */
@@ -130,10 +131,9 @@ int MQTTProperties_add(MQTTProperties* props, const MQTTProperty* prop)
 
 int MQTTProperty_write(unsigned char** pptr, MQTTProperty* prop)
 {
-  int rc = -1,
-      type = -1;
+  int rc = -1;
+  int type = MQTTProperty_getType(prop->identifier);
 
-  type = MQTTProperty_getType(prop->identifier);
   if (type >= MQTTPROPERTY_TYPE_BYTE && type <= MQTTPROPERTY_TYPE_UTF_8_STRING_PAIR)
   {
     writeChar(pptr, prop->identifier);
@@ -166,6 +166,9 @@ int MQTTProperty_write(unsigned char** pptr, MQTTProperty* prop)
         break;
     }
   }
+  if (rc < 0) {
+    return -1; /* error */
+  } 
   return rc + 1; /* include identifier byte */
 }
 
@@ -179,12 +182,13 @@ int MQTTProperty_write(unsigned char** pptr, MQTTProperty* prop)
 int MQTTProperties_write(unsigned char** pptr, const MQTTProperties* properties)
 {
   int rc = -1;
-  int i = 0, len = 0;
+  int len = 0;
 
   /* write the entire property list length first */
   *pptr += MQTTPacket_encode(*pptr, properties->length);
-  len = rc = 1;
-  for (i = 0; i < properties->count; ++i)
+  rc = 1;
+  len = 1;
+  for (int i = 0; i < properties->count; ++i)
   {
     rc = MQTTProperty_write(pptr, &properties->array[i]);
     if (rc < 0)
@@ -192,8 +196,9 @@ int MQTTProperties_write(unsigned char** pptr, const MQTTProperties* properties)
     else
       len += rc;
   }
-  if (rc >= 0)
+  if (rc >= 0) {
     rc = len;
+  }
 
   return rc;
 }
@@ -201,8 +206,8 @@ int MQTTProperties_write(unsigned char** pptr, const MQTTProperties* properties)
 
 int MQTTProperty_read(MQTTProperty* prop, unsigned char** pptr, const unsigned char* enddata)
 {
-  int type = -1,
-    len = -1;
+  int type = -1;
+  int len = -1;
 
   prop->identifier = (MQTTPropertyCodes)readChar(pptr);
   type = MQTTProperty_getType(prop->identifier);

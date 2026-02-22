@@ -43,9 +43,9 @@ int MQTTPacket_checkVersion(MQTTString* protocol, int version)
 			min(4, protocol->lenstring.len)) == 0)
 		rc = 1;
 #if defined(MQTTV5)
-  else if (version == 5 && memcmp(protocol->lenstring.data, "MQTT",
-		  min(4, protocol->lenstring.len)) == 0)
-	  rc = 1;
+	else if (version == 5 && memcmp(protocol->lenstring.data, "MQTT",
+			min(4, protocol->lenstring.len)) == 0)
+		rc = 1;
 #endif
 	return rc;
 }
@@ -75,20 +75,19 @@ int32_t MQTTV5Deserialize_connect(MQTTProperties* connectProperties, MQTTV5Packe
 int32_t MQTTDeserialize_connect(MQTTPacket_connectData* data, unsigned char* buf, int32_t len)
 #endif
 {
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
-	MQTTConnectFlags flags;
-	memset(&flags, 0, sizeof(flags));
+	unsigned char header;
+	unsigned char flags = 0;
 	unsigned char* curdata = buf;
 	unsigned char* enddata = &buf[len];
 	int32_t rc = 0;
 	MQTTString Protocol;
-	int32_t mylen = 0;
+	size_t mylen = 0;
 
 	FUNC_ENTRY;
-	header.byte = readChar(&curdata);
-	if (header.bits.type != CONNECT)
+	header = readChar(&curdata);
+	if ((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT != CONNECT) {
 		goto exit;
+	}
 
 	curdata += MQTTPacket_decodeBuf(curdata, &mylen); /* read remaining length */
 
@@ -102,11 +101,11 @@ int32_t MQTTDeserialize_connect(MQTTPacket_connectData* data, unsigned char* buf
 	 */
 	if (MQTTPacket_checkVersion(&Protocol, data->MQTTVersion))
 	{
-		flags.all = readChar(&curdata);
+		flags = readChar(&curdata);
 #if defined(MQTTV5)
-		data->cleanstart = flags.bits.cleansession;
+		data->cleanstart = (flags & MQTT_CONNECT_CLEAN_START_MASK) != 0;
 #else
-		data->cleansession = flags.bits.cleansession;
+		data->cleansession = (flags & MQTT_CONNECT_CLEAN_START_MASK) != 0;
 #endif
 
 		data->keepAliveInterval = readInt(&curdata);
@@ -119,8 +118,8 @@ int32_t MQTTDeserialize_connect(MQTTPacket_connectData* data, unsigned char* buf
 		#endif
 		if (!readMQTTLenString(&data->clientID, &curdata, enddata))
 			goto exit;
-		data->willFlag = flags.bits.will;
-		if (flags.bits.will)
+		data->willFlag = (flags & MQTT_CONNECT_WILL_FLAG_MASK) != 0;
+		if (data->willFlag)
 		{
 			#if defined(MQTTV5)
 			if (data->MQTTVersion == 5)
@@ -129,22 +128,23 @@ int32_t MQTTDeserialize_connect(MQTTPacket_connectData* data, unsigned char* buf
 				  goto exit;
 			}
 			#endif
-			data->will.qos = flags.bits.willQoS;
-			data->will.retained = flags.bits.willRetain;
+			data->will.qos = (flags & MQTT_CONNECT_WILL_QOS_MASK) >> 3;
+			data->will.retained = (flags & MQTT_CONNECT_WILL_RETAIN_MASK) != 0;
 			if (!readMQTTLenString(&data->will.topicName, &curdata, enddata) ||
 				  !readMQTTLenString(&data->will.message, &curdata, enddata))
 				goto exit;
 		}
-		if (flags.bits.username)
+		if (flags & MQTT_CONNECT_USERNAME_MASK)
 		{
 			if (enddata - curdata < 3 || !readMQTTLenString(&data->username, &curdata, enddata))
 				goto exit; /* username flag set, but no username supplied - invalid */
-			if (flags.bits.password &&
+			if (flags & MQTT_CONNECT_PASSWORD_MASK &&
 				(enddata - curdata < 3 || !readMQTTLenString(&data->password, &curdata, enddata)))
 				goto exit; /* password flag set, but no password supplied - invalid */
 		}
-		else if (flags.bits.password)
+		else if (flags & MQTT_CONNECT_PASSWORD_MASK) {
 			goto exit; /* password flag set without username - invalid */
+		}
 		rc = 1;
 	}
 exit:
@@ -164,13 +164,12 @@ exit:
   */
 #if defined(MQTTV5)
 int32_t MQTTV5Serialize_connack(unsigned char* buf, size_t buflen, unsigned char connack_rc, unsigned char sessionPresent,
-  MQTTProperties* connackProperties)
+  const MQTTProperties* connackProperties)
 #else
 int32_t MQTTSerialize_connack(unsigned char* buf, size_t buflen, unsigned char connack_rc, unsigned char sessionPresent)
 #endif
 {
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	int32_t rc = 0;
 	unsigned char *ptr = buf;
 	MQTTConnackFlags flags = {0};
@@ -189,9 +188,9 @@ int32_t MQTTSerialize_connack(unsigned char* buf, size_t buflen, unsigned char c
 		rc = MQTTPACKET_BUFFER_TOO_SHORT;
 		goto exit;
 	}
-	header.byte = 0;
-	header.bits.type = CONNACK;
-	writeChar(&ptr, header.byte); /* write header */
+	header = 0;
+	header |= (CONNACK << MQTT_HEADER_TYPE_SHIFT);
+	writeChar(&ptr, header); /* write header */
 
 	ptr += MQTTPacket_encode_internal(ptr, len); /* write remaining length */
 
@@ -216,18 +215,17 @@ exit:
 int32_t MQTTV5Deserialize_zero(unsigned char packettype, MQTTProperties* properties, unsigned char* reasonCode,
 	    unsigned char* buf, size_t buflen)
 {
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = 0;
-	int32_t mylen;
+	size_t mylen = 0;
 
 	FUNC_ENTRY;
-	header.byte = readChar(&curdata);
-	if (header.bits.type != packettype)
+	header = readChar(&curdata);
+	if ((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT != packettype) {
 		goto exit;
-
+	}
 	curdata += (rc = MQTTPacket_decodeBuf(curdata, &mylen)); /* read remaining length */
 	enddata = curdata + mylen;
 

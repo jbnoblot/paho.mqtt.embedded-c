@@ -71,7 +71,7 @@ int TimerLeftMS(Timer* timer)
 }
 
 
-char TimerIsExpired(Timer* timer)
+char TimerIsExpired(const Timer* timer)
 {
 	return xTaskCheckForTimeOut(&timer->xTimeOut, &timer->xTicksToWait) == pdTRUE;
 }

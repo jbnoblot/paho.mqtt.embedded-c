@@ -119,14 +119,13 @@ char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf,
 {
 	int index = 0;
 	int rem_length = 0;
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	int strindex = 0;
 
-	header.byte = buf[index++];
+	header = buf[index++];
 	index += MQTTPacket_decodeBuf(&buf[index], &rem_length);
 
-	switch (header.bits.type)
+	switch ((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT)
 	{
 
 	case CONNACK:
@@ -178,7 +177,7 @@ char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf,
 	case PINGREQ:
 	case PINGRESP:
 	case DISCONNECT:
-		strindex = snprintf(strbuf, strbuflen, "%s", MQTTPacket_names[header.bits.type]);
+		strindex = snprintf(strbuf, strbuflen, "%s", MQTTPacket_names[(header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT]);
 		break;
 	}
 	return strbuf;
@@ -190,14 +189,13 @@ char* MQTTFormat_toServerString(char* strbuf, int strbuflen, unsigned char* buf,
 {
 	int index = 0;
 	int rem_length = 0;
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	int strindex = 0;
 
-	header.byte = buf[index++];
+	header = buf[index++];
 	index += MQTTPacket_decodeBuf(&buf[index], &rem_length);
 
-	switch (header.bits.type)
+	switch ((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT)
 	{
 	case CONNECT:
 	{
@@ -255,7 +253,7 @@ char* MQTTFormat_toServerString(char* strbuf, int strbuflen, unsigned char* buf,
 	case PINGREQ:
 	case PINGRESP:
 	case DISCONNECT:
-		strindex = snprintf(strbuf, strbuflen, "%s", MQTTPacket_names[header.bits.type]);
+		strindex = snprintf(strbuf, strbuflen, "%s", MQTTPacket_names[(header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT]);
 		break;
 	}
 	strbuf[strbuflen] = '\0';

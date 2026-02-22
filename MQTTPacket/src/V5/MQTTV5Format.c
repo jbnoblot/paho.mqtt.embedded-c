@@ -119,14 +119,14 @@ char* MQTTV5Format_toClientString(char* strbuf, int strbuflen, unsigned char* bu
 {
 	int index = 0;
 	int rem_length = 0;
-	MQTTHeader header;
+	unsigned char header;
 	memset(&header, 0, sizeof(header));
 	int strindex = 0;
 
-	header.byte = buf[index++];
+	header = buf[index++];
 	index += MQTTPacket_decodeBuf(&buf[index], &rem_length);
-
-	switch (header.bits.type)
+	unsigned char headerype = (header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT;
+	switch (headerype)
 	{
 
 	case CONNACK:
@@ -186,7 +186,7 @@ char* MQTTV5Format_toClientString(char* strbuf, int strbuflen, unsigned char* bu
 	case PINGREQ:
 	case PINGRESP:
 	case DISCONNECT:
-		strindex = snprintf(strbuf, strbuflen, "%s", MQTTV5Packet_names[header.bits.type]);
+		strindex = snprintf(strbuf, strbuflen, "%s", MQTTV5Packet_names[headerype]);
 		break;
 	}
 	return strbuf;
@@ -198,14 +198,15 @@ char* MQTTV5Format_toServerString(char* strbuf, int strbuflen, unsigned char* bu
 {
 	int index = 0;
 	int rem_length = 0;
-	MQTTHeader header;
+	unsigned char header;
 	memset(&header, 0, sizeof(header));
 	int strindex = 0;
 
-	header.byte = buf[index++];
+	header = buf[index++];
 	index += MQTTPacket_decodeBuf(&buf[index], &rem_length);
+	unsigned char headerype = (header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT;
 
-	switch (header.bits.type)
+	switch (headerype)
 	{
 	case CONNECT:
 	{
@@ -242,7 +243,8 @@ char* MQTTV5Format_toServerString(char* strbuf, int strbuflen, unsigned char* bu
 	{
 		unsigned char dup;
 		unsigned short packetid;
-		int maxcount = 1, count = 0;
+		int maxcount = 1;
+		int count = 0;
 		MQTTString topicFilters[1];
 		unsigned char requestedQoSs[1];
 		MQTTSubscribe_options sub_options[1];
@@ -256,7 +258,8 @@ char* MQTTV5Format_toServerString(char* strbuf, int strbuflen, unsigned char* bu
 	{
 		unsigned char dup;
 		unsigned short packetid;
-		int maxcount = 1, count = 0;
+		int maxcount = 1;
+		int count = 0;
 		MQTTString topicFilters[1];
 		if (MQTTV5Deserialize_unsubscribe(&dup, &packetid, NULL, maxcount, &count, topicFilters, buf, buflen) == 1)
 			strindex =  MQTTV5StringFormat_unsubscribe(strbuf, strbuflen, dup, packetid, count, topicFilters);
@@ -265,7 +268,7 @@ char* MQTTV5Format_toServerString(char* strbuf, int strbuflen, unsigned char* bu
 	case PINGREQ:
 	case PINGRESP:
 	case DISCONNECT:
-		strindex = snprintf(strbuf, strbuflen, "%s", MQTTV5Packet_names[header.bits.type]);
+		strindex = snprintf(strbuf, strbuflen, "%s", MQTTV5Packet_names[headerype]);
 		break;
 	}
 	strbuf[strbuflen] = '\0';

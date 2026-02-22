@@ -167,7 +167,7 @@ public:
   }
 
 
-  bool expired()
+  bool expired() const
   {
 		struct timeval now, res;
 		gettimeofday(&now, NULL);
@@ -198,7 +198,7 @@ public:
   }
 
 
-  int left_ms()
+  int left_ms() const
   {
 		struct timeval now, res;
 		gettimeofday(&now, NULL);

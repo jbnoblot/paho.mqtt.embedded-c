@@ -22,7 +22,7 @@ void TimerInit(Timer* timer)
 	timer->end_time = (struct timeval){0, 0};
 }
 
-char TimerIsExpired(Timer* timer)
+char TimerIsExpired(const Timer* timer)
 {
 	struct timeval now, res;
 	gettimeofday(&now, NULL);
@@ -49,7 +49,7 @@ void TimerCountdown(Timer* timer, unsigned int timeout)
 }
 
 
-int TimerLeftMS(Timer* timer)
+int TimerLeftMS(const Timer* timer)
 {
 	struct timeval now, res;
 	gettimeofday(&now, NULL);

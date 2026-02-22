@@ -46,20 +46,20 @@ int32_t MQTTDeserialize_publish(unsigned char* dup, unsigned char* qos, unsigned
 		unsigned char** payload, int32_t* payloadlen, unsigned char* buf, size_t buflen)
 #endif
 {
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	unsigned char* curdata = buf;
 	const unsigned char* enddata = NULL;
 	int32_t rc = 0;
 	size_t mylen = 0;
 
 	FUNC_ENTRY;
-	header.byte = readChar(&curdata);
-	if (header.bits.type != PUBLISH)
+	header = readChar(&curdata);
+	if ((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT != PUBLISH) {
 		goto exit;
-	*dup = header.bits.dup;
-	*qos = header.bits.qos;
-	*retained = header.bits.retain;
+	}
+	*dup = (header & MQTT_HEADER_DUP_MASK) != 0;
+	*qos = (header & MQTT_HEADER_QOS_MASK) >> MQTT_HEADER_QOS_SHIFT;
+	*retained = (header & MQTT_HEADER_RETAIN_MASK) != 0;
 
 	curdata += (rc = MQTTPacket_decodeBuf(curdata, &mylen)); /* read remaining length */
 	enddata = curdata + mylen;
@@ -68,8 +68,9 @@ int32_t MQTTDeserialize_publish(unsigned char* dup, unsigned char* qos, unsigned
 		enddata - curdata < 0) /* do we have enough data to read the protocol version byte? */
 		goto exit;
 
-	if (*qos > 0)
+	if (*qos > 0) {
 		*packetid = readInt(&curdata);
+	}
 
 #if defined(MQTTV5)
 	if (properties && !MQTTProperties_read(properties, &curdata, enddata))
@@ -102,17 +103,16 @@ int32_t MQTTV5Deserialize_ack(unsigned char* packettype, unsigned char* dup, uns
 int32_t MQTTDeserialize_ack(unsigned char* packettype, unsigned char* dup, unsigned short* packetid, unsigned char* buf, size_t buflen)
 #endif
 {
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header = 0;
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = 0;
 	size_t mylen = 0;
 
 	FUNC_ENTRY;
-	header.byte = readChar(&curdata);
-	*dup = header.bits.dup;
-	*packettype = header.bits.type;
+	header = readChar(&curdata);
+	*dup = (header & MQTT_HEADER_DUP_MASK) != 0;
+	*packettype = (header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT;
 
 	curdata += (rc = MQTTPacket_decodeBuf(curdata, &mylen)); /* read remaining length */
 	enddata = curdata + mylen;

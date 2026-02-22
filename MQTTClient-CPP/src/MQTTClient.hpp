@@ -258,16 +258,16 @@ private:
 
     void closeSession();
     void cleanSession();
-    int cycle(Timer& timer);
-    int waitfor(int packet_type, Timer& timer);
+    int cycle(const Timer& timer);
+    int waitfor(int packet_type, const Timer& timer);
     int keepalive();
     int publish(int32_t len, Timer& timer, enum QoS qos);
 
     int decodePacket(int* value, int timeout);
-    int readPacket(Timer& timer);
-    int sendPacket(int32_t length, Timer& timer);
+    int readPacket(const Timer& timer);
+    int sendPacket(int32_t length, const Timer& timer);
     int deliverMessage(MQTTString& topicName, Message& message);
-    bool isTopicMatched(char* topicFilter, MQTTString& topicName);
+    bool isTopicMatched(const char* topicFilter, const MQTTString& topicName);
 
     Network& ipstack;
     unsigned long command_timeout_ms;
@@ -397,7 +397,7 @@ void MQTT::Client<Network, Timer, a, b>::freeQoS2msgid(unsigned short id)
 
 
 template<class Network, class Timer, int a, int b>
-int MQTT::Client<Network, Timer, a, b>::sendPacket(int32_t length, Timer& timer)
+int MQTT::Client<Network, Timer, a, b>::sendPacket(int32_t length, const Timer& timer)
 {
     int rc = FAILURE,
         sent = 0;
@@ -471,11 +471,10 @@ exit:
  * @return the MQTT packet type, 0 if none, -1 if error
  */
 template<class Network, class Timer, int MAX_MQTT_PACKET_SIZE, int b>
-int MQTT::Client<Network, Timer, MAX_MQTT_PACKET_SIZE, b>::readPacket(Timer& timer)
+int MQTT::Client<Network, Timer, MAX_MQTT_PACKET_SIZE, b>::readPacket(const Timer& timer)
 {
     int rc = FAILURE;
-    MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+    unsigned char header;
     int32_t len = 0;
     int rem_len = 0;
 
@@ -499,8 +498,8 @@ int MQTT::Client<Network, Timer, MAX_MQTT_PACKET_SIZE, b>::readPacket(Timer& tim
     if (rem_len > 0 && (ipstack.read(readbuf + len, rem_len, timer.left_ms()) != rem_len))
         goto exit;
 
-    header.byte = readbuf[0];
-    rc = header.bits.type;
+    header = readbuf[0];
+    rc = (header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT;
     if (this->keepAliveInterval > 0)
         last_received.countdown(this->keepAliveInterval); // record the fact that we have successfully received a packet
 exit:
@@ -526,11 +525,11 @@ exit:
 // # can only be at end
 // + and # can only be next to separator
 template<class Network, class Timer, int a, int b>
-bool MQTT::Client<Network, Timer, a, b>::isTopicMatched(char* topicFilter, MQTTString& topicName)
+bool MQTT::Client<Network, Timer, a, b>::isTopicMatched(const char* topicFilter, const MQTTString& topicName)
 {
-    char* curf = topicFilter;
-    char* curn = topicName.lenstring.data;
-    char* curn_end = curn + topicName.lenstring.len;
+    const char* curf = topicFilter;
+    const char* curn = topicName.lenstring.data;
+    const char* curn_end = curn + topicName.lenstring.len;
 
     while (*curf && curn < curn_end)
     {
@@ -540,7 +539,7 @@ bool MQTT::Client<Network, Timer, a, b>::isTopicMatched(char* topicFilter, MQTTS
             break;
         if (*curf == '+')
         {   // skip until we meet the next separator, or end of string
-            char* nextpos = curn + 1;
+            const char* nextpos = curn + 1;
             while (nextpos < curn_end && *nextpos != '/')
                 nextpos = ++curn + 1;
         }
@@ -608,7 +607,7 @@ int MQTT::Client<Network, Timer, a, b>::yield(unsigned long timeout_ms)
 
 
 template<class Network, class Timer, int MAX_MQTT_PACKET_SIZE, int b>
-int MQTT::Client<Network, Timer, MAX_MQTT_PACKET_SIZE, b>::cycle(Timer& timer)
+int MQTT::Client<Network, Timer, MAX_MQTT_PACKET_SIZE, b>::cycle(const Timer& timer)
 {
     // get one piece of work off the wire and one pass through
     int32_t len = 0,
@@ -744,7 +743,7 @@ exit:
 
 // only used in single-threaded mode where one command at a time is in process
 template<class Network, class Timer, int a, int b>
-int MQTT::Client<Network, Timer, a, b>::waitfor(int packet_type, Timer& timer)
+int MQTT::Client<Network, Timer, a, b>::waitfor(int packet_type, const Timer& timer)
 {
     int rc = FAILURE;
 

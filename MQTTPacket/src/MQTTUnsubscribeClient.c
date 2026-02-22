@@ -69,8 +69,7 @@ int32_t MQTTSerialize_unsubscribe(unsigned char* buf, size_t buflen, unsigned ch
 #endif
 {
 	unsigned char *ptr = buf;
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	int32_t rem_len = 0;
 	int32_t rc = -1;
 	int i = 0;
@@ -86,11 +85,11 @@ int32_t MQTTSerialize_unsubscribe(unsigned char* buf, size_t buflen, unsigned ch
 		goto exit;
 	}
 
-	header.byte = 0;
-	header.bits.type = UNSUBSCRIBE;
-	header.bits.dup = dup;
-	header.bits.qos = 1;
-	writeChar(&ptr, header.byte); /* write header */
+	header = 0;
+	header |= (UNSUBSCRIBE << MQTT_HEADER_TYPE_SHIFT);
+	header |= (dup << MQTT_HEADER_DUP_SHIFT);
+	header |= (1 << MQTT_HEADER_QOS_SHIFT); /* QoS = 1 */
+	writeChar(&ptr, header); /* write header */
 
 	ptr += MQTTPacket_encode_internal(ptr, rem_len); /* write remaining length */;
 

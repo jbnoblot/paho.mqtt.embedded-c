@@ -52,10 +52,10 @@ typedef struct Timer
 } Timer;
 
 void TimerInit(Timer*);
-char TimerIsExpired(Timer*);
+char TimerIsExpired(const Timer*);
 void TimerCountdownMS(Timer*, unsigned int);
 void TimerCountdown(Timer*, unsigned int);
-int TimerLeftMS(Timer*);
+int TimerLeftMS(const Timer*);
 
 typedef struct Network
 {

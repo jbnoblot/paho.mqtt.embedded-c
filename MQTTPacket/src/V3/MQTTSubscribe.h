@@ -33,7 +33,7 @@ DLLExport int32_t MQTTDeserialize_subscribe(unsigned char* dup, unsigned short* 
 
 DLLExport int32_t MQTTSerialize_suback(unsigned char* buf, size_t buflen, unsigned short packetid, int count, const unsigned char* grantedQoSs);
 
-DLLExport int32_t MQTTDeserialize_suback(unsigned short* packetid, int maxcount, int* count, unsigned char grantedQoSs[], unsigned char* buf, size_t buflen);
+DLLExport int32_t MQTTDeserialize_suback(unsigned short* packetid, int maxcount, int* count, unsigned char grantedQoSs[], const unsigned char* buf, size_t buflen);
 
 
 #endif /* MQTTSUBSCRIBE_H_ */

@@ -89,10 +89,10 @@ extern "C"
     /* The Timer structure must be defined in the platform specific header,
      * and have the following functions to operate on it.  */
     extern void TimerInit(Timer *);
-    extern char TimerIsExpired(Timer *);
+    extern char TimerIsExpired(const Timer *);
     extern void TimerCountdownMS(Timer *, unsigned int);
     extern void TimerCountdown(Timer *, unsigned int);
-    extern int TimerLeftMS(Timer *);
+    extern int TimerLeftMS(const Timer *);
 
     /**
      * @brief Data structure for holding information about a message.
@@ -142,8 +142,8 @@ extern "C"
         /// @brief The MQTTv5 reason code.
         enum MQTTReasonCodes reasonCode;
 #else
-    /// @brief The MQTTv3 reason code.
-    unsigned char rc;
+        /// @brief The MQTTv3 reason code.
+        unsigned char rc;
 #endif /* MQTTV5 */
         /// @brief The MQTT session present flag.
         unsigned char sessionPresent;
@@ -161,8 +161,8 @@ extern "C"
         /// @brief The MQTT reason code.
         enum MQTTReasonCodes reasonCode;
 #else
-    /// @brief The MQTT granted QoS or `MQTTQOS_SUBFAIL` on failure.
-    enum MQTTQoS grantedQoS;
+        /// @brief The MQTT granted QoS or `MQTTQOS_SUBFAIL` on failure.
+        enum MQTTQoS grantedQoS;
 #endif /* MQTTV5 */
     } MQTTSubackData;
 
@@ -211,23 +211,21 @@ extern "C"
      */
     typedef struct MQTTClient
     {
-        unsigned int next_packetid,
-            command_timeout_ms;
-        size_t buf_size,
-            readbuf_size;
-        unsigned char *buf,
-            *readbuf;
+        unsigned int command_timeout_ms;
+        size_t buf_size;
+        size_t readbuf_size;
+        unsigned char *buf;
+        unsigned char *readbuf;
         unsigned int keepAliveInterval;
-        char ping_outstanding;
         int isconnected;
-
 #if defined(MQTTV5)
         int cleanstart;
         MQTTProperties *recvProperties;
 #else
-    int cleansession;
+        int cleansession;
 #endif /* MQTTV5 */
-
+        unsigned short next_packetid;
+        char ping_outstanding;
         struct MessageHandlers
         {
             const char *topicFilter;
@@ -237,7 +235,9 @@ extern "C"
         void (*defaultMessageHandler)(MessageData *);
 
         Network *ipstack;
-        Timer last_sent, last_received, pingresp_timer;
+        Timer last_sent;
+        Timer last_received;
+        Timer pingresp_timer;
 #if defined(MQTT_TASK)
         Mutex mutex;
         Thread thread;

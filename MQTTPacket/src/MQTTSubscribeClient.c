@@ -70,8 +70,7 @@ int32_t MQTTSerialize_subscribe(unsigned char* buf, size_t buflen, unsigned char
 #endif
 {
 	unsigned char *ptr = buf;
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
+	unsigned char header;
 	int32_t rem_len = 0;
 	int32_t rc = 0;
 	int i = 0;
@@ -87,11 +86,11 @@ int32_t MQTTSerialize_subscribe(unsigned char* buf, size_t buflen, unsigned char
 		goto exit;
 	}
 
-	header.byte = 0;
-	header.bits.type = SUBSCRIBE;
-	header.bits.dup = dup;
-	header.bits.qos = 1;
-	writeChar(&ptr, header.byte); /* write header */
+	header = 0;
+	header |= (SUBSCRIBE << MQTT_HEADER_TYPE_SHIFT);
+	header |= (dup << MQTT_HEADER_DUP_SHIFT);
+	header |= (1 << MQTT_HEADER_QOS_SHIFT); /* QoS 1 */
+	writeChar(&ptr, header); /* write header */
 
 	ptr += MQTTPacket_encode_internal(ptr, rem_len); /* write remaining length */;
 
@@ -144,25 +143,24 @@ int32_t MQTTV5Deserialize_suback(unsigned short* packetid, MQTTProperties* prope
 }
 
 int32_t MQTTV5Deserialize_subunsuback(int type, unsigned short* packetid, MQTTProperties* properties,
-	  int maxcount, int* count, unsigned char* reasonCodes, unsigned char* buf, size_t buflen)
+	  int maxcount, int* count, unsigned char* reasonCodes, const unsigned char* buf, size_t buflen)
 #else
 int32_t MQTTDeserialize_suback(unsigned short* packetid, int maxcount, int* count, unsigned char grantedQoSs[],
-	unsigned char* buf, size_t buflen)
+	const unsigned char* buf, size_t buflen)
 #endif
 {
-	MQTTHeader header;
-	memset(&header, 0, sizeof(header));
-	unsigned char* curdata = buf;
+	unsigned char header;
+	const unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
 	int32_t rc = 0;
 	size_t mylen = 0;
 
 	FUNC_ENTRY;
-	header.byte = readChar(&curdata);
+	header = readChar(&curdata);
 #if defined(MQTTV5)
-	if (header.bits.type != type)
+	if ((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT != type)
 #else
-	if (header.bits.type != SUBACK)
+	if ((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT != SUBACK)
 #endif
 		goto exit;
 
@@ -188,9 +186,9 @@ int32_t MQTTDeserialize_suback(unsigned short* packetid, int maxcount, int* coun
 			  goto exit;
 	  	}
 #if defined(MQTTV5)
-      reasonCodes[(*count)++]
+		reasonCodes[(*count)++]
 #else
-		  grantedQoSs[(*count)++]
+		grantedQoSs[(*count)++]
 #endif
                               = (unsigned char)readChar(&curdata);
 	  }
