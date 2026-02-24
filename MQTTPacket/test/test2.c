@@ -139,7 +139,7 @@ int test1(struct Options options)
 
 	data.MQTTVersion = 5;
 	connectProperties.max_count = 10;
-	//connectProperties.array = connect_props;
+	connectProperties.array = connect_props;
 
 	MQTTProperty one;
 	one.identifier = MQTTPROPERTY_CODE_SESSION_EXPIRY_INTERVAL;
@@ -147,13 +147,13 @@ int test1(struct Options options)
 	rc = MQTTProperties_add(&connectProperties, &one);
 
 	willProperties.max_count = 10;
-	//willProperties.array = will_props;
+	willProperties.array = will_props;
 
 	outConnectProperties.max_count = 10;
-	//outConnectProperties.array = out_connect_props;
+	outConnectProperties.array = out_connect_props;
 
 	outWillProperties.max_count = 10;
-	//outWillProperties.array = out_will_props;
+	outWillProperties.array = out_will_props;
 
 	data.clientID.cstring = "my clientid";
 
@@ -216,14 +216,10 @@ int test2(struct Options options)
 	MQTTProperties properties = MQTTProperties_initializer;
 	MQTTProperties outProperties = MQTTProperties_initializer;
 	MQTTProperty props[10], out_props[10];
-/*
 	properties.max_count = 10;
 	properties.array = props;
-*/
-/*
 	outProperties.max_count = 10;
 	outProperties.array = out_props;
-*/
 	MQTTProperty one;
 	one.identifier = MQTTPROPERTY_CODE_SESSION_EXPIRY_INTERVAL;
 	one.value.integer4 = 45;
@@ -294,13 +290,11 @@ int test3(struct Options options)
 	MQTTProperties properties = MQTTProperties_initializer;
 	MQTTProperties outProperties = MQTTProperties_initializer;
 	MQTTProperty props[10], out_props[10];
-/*
 	properties.max_count = 10;
 	properties.array = props;
 
 	outProperties.max_count = 10;
 	outProperties.array = out_props;
-*/
 	MQTTProperty one;
 	one.identifier = MQTTPROPERTY_CODE_USER_PROPERTY;
 	one.value.string_pair.key.data = "user property name";
@@ -378,13 +372,11 @@ int test4(struct Options options)
 	MQTTProperties properties = MQTTProperties_initializer;
 	MQTTProperties outProperties = MQTTProperties_initializer;
 	MQTTProperty props[10], out_props[10];
-/*
 	properties.max_count = 10;
 	properties.array = props;
 
 	outProperties.max_count = 10;
 	outProperties.array = out_props;
-*/
 	MQTTProperty one;
 	one.identifier = MQTTPROPERTY_CODE_USER_PROPERTY;
 	one.value.string_pair.key.data = "user property name";
@@ -445,10 +437,10 @@ int test5(struct Options options)
 	MQTTProperty props[10], out_props[10];
 
 	properties.max_count = 10;
-	//properties.array = props;
+	properties.array = props;
 
 	outProperties.max_count = 10;
-	//outProperties.array = out_props;
+	outProperties.array = out_props;
 
 	MQTTProperty one;
 	one.identifier = MQTTPROPERTY_CODE_USER_PROPERTY;
@@ -513,11 +505,11 @@ int test6(struct Options options)
 
 	connackProperties.count = connackProperties.length = 0;
 	connackProperties.max_count = 10;
-	//connackProperties.array = connack_props;
+	connackProperties.array = connack_props;
 
 	outConnackProperties.count = outConnackProperties.length = 0;
 	outConnackProperties.max_count = 10;
-	//outConnackProperties.array = out_connack_props;
+	outConnackProperties.array = out_connack_props;
 
   MQTTProperty one;
 	one.identifier = MQTTPROPERTY_CODE_SESSION_EXPIRY_INTERVAL;
@@ -562,10 +554,10 @@ int test7(struct Options options)
 	MyLog(LOGA_INFO, "Starting test 7 - serialization of disconnect and back");
 
 	disconnectProperties.max_count = 10;
-	//disconnectProperties.array = disconnect_props;
+	disconnectProperties.array = disconnect_props;
 
 	outdisconnectProperties.max_count = 10;
-	//outdisconnectProperties.array = out_disconnect_props;
+	outdisconnectProperties.array = out_disconnect_props;
 
 	one.identifier = MQTTPROPERTY_CODE_SESSION_EXPIRY_INTERVAL;
 	one.value.integer4 = 45;
@@ -616,10 +608,10 @@ int test8(struct Options options)
 	MQTTProperty props[10], out_props[10];
 
 	properties.max_count = 10;
-	//properties.array = props;
+	properties.array = props;
 
 	outProperties.max_count = 10;
-	//outProperties.array = out_props;
+	outProperties.array = out_props;
 
 	MQTTProperty one;
 	one.identifier = MQTTPROPERTY_CODE_USER_PROPERTY;
@@ -669,13 +661,11 @@ int test9(struct Options options)
 	MQTTProperties properties = MQTTProperties_initializer;
 	MQTTProperties outProperties = MQTTProperties_initializer;
 	MQTTProperty props[10], out_props[10];
-/*
 	properties.max_count = 10;
 	properties.array = props;
 
 	outProperties.max_count = 10;
 	outProperties.array = out_props;
-*/
 	MQTTProperty one;
 	one.identifier = MQTTPROPERTY_CODE_USER_PROPERTY;
 	one.value.string_pair.key.data = "user property name";

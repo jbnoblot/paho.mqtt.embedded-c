@@ -57,11 +57,11 @@ int main(int argc, char *argv[])
 	int port = 1884;
 	MQTTProperty recv_properties_array[5];
 	MQTTProperties recv_properties = MQTTProperties_initializer;
-	//recv_properties.array = recv_properties_array;
+	recv_properties.array = recv_properties_array;
 	recv_properties.max_count = 5;
 	MQTTProperty send_properties_array[2];
 	MQTTProperties send_properties = MQTTProperties_initializer;
-	//send_properties.array = send_properties_array;
+	send_properties.array = send_properties_array;
 	send_properties.max_count = 2;
 	int server_topic_alias_max = 0;
 

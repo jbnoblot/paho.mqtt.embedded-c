@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
 	MQTTProperty pub_properties_array[1];
 	MQTTProperties pub_properties = MQTTProperties_initializer;
-	//pub_properties.array = pub_properties_array;
+	pub_properties.array = pub_properties_array;
 	pub_properties.max_count = 1;
 
 	MQTTProperty v5property;
