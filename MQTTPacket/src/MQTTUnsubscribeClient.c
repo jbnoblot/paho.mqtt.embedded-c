@@ -40,11 +40,13 @@ int32_t MQTTSerialize_unsubscribeLength(int count, MQTTString topicFilters[])
 	int i;
 	int32_t len = 2; /* packetid */
 
-	for (i = 0; i < count; ++i)
+	for (i = 0; i < count; ++i) {
 		len += 2 + MQTTstrlen(&topicFilters[i]); /* length + topic*/
+	}
 #if defined(MQTTV5)
-	if (properties)
+	if (properties) {
 		len += MQTTProperties_len(properties);
+	}
 #endif
 	return len;
 }
@@ -72,14 +74,14 @@ int32_t MQTTSerialize_unsubscribe(unsigned char* buf, size_t buflen, unsigned ch
 	unsigned char header;
 	int32_t rem_len = 0;
 	int32_t rc = -1;
-	int i = 0;
 
 	FUNC_ENTRY;
 #if defined(MQTTV5)
-	if (MQTTPacket_len(rem_len = MQTTV5Serialize_unsubscribeLength(count, topicFilters, properties)) > buflen)
+	rem_len = MQTTV5Serialize_unsubscribeLength(count, topicFilters, properties);
 #else
-	if (MQTTPacket_len(rem_len = MQTTSerialize_unsubscribeLength(count, topicFilters)) > buflen)
+	rem_len = MQTTSerialize_unsubscribeLength(count, topicFilters);
 #endif
+	if (MQTTPacket_len(rem_len) > buflen)
 	{
 		rc = MQTTPACKET_BUFFER_TOO_SHORT;
 		goto exit;
@@ -96,13 +98,14 @@ int32_t MQTTSerialize_unsubscribe(unsigned char* buf, size_t buflen, unsigned ch
 	writeInt(&ptr, packetid);
 
 #if defined(MQTTV5)
-	if (properties && MQTTProperties_write(&ptr, properties) < 0)
+	if (properties && MQTTProperties_write(&ptr, properties) < 0) {
 		goto exit;
+	}
 #endif
 
-	for (i = 0; i < count; ++i)
+	for (int i = 0; i < count; ++i) {
 		writeMQTTString(&ptr, &topicFilters[i]);
-
+	} 
 	rc = ptr - buf;
 exit:
 	FUNC_EXIT_RC(rc);
@@ -118,17 +121,17 @@ exit:
   * @return error code.  1 is success, 0 is failure
   */
 #if defined(MQTTV5)
-int32_t MQTTV5Deserialize_unsuback(unsigned short* packetid, MQTTProperties* properties,
+int MQTTV5Deserialize_unsuback(unsigned short* packetid, MQTTProperties* properties,
 		int maxcount, int* count, unsigned char* reasonCodes, unsigned char* buf, size_t buflen)
 #else
-int32_t MQTTDeserialize_unsuback(unsigned short* packetid, unsigned char* buf, size_t buflen)
+int MQTTDeserialize_unsuback(unsigned short* packetid, unsigned char* buf, size_t buflen)
 #endif
 {
 #if !defined(MQTTV5)
 	unsigned char type = 0;
 	unsigned char dup = 0;
 #endif
-	int32_t rc = 0;
+	int rc = 0;
 
 	FUNC_ENTRY;
 #if defined(MQTTV5)

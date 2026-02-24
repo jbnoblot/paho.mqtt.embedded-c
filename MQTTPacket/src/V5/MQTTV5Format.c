@@ -211,8 +211,7 @@ char* MQTTV5Format_toServerString(char* strbuf, int strbuflen, unsigned char* bu
 	case CONNECT:
 	{
 		MQTTV5Packet_connectData data;
-		int rc;
-		if ((rc = MQTTV5Deserialize_connect(NULL, &data, buf, buflen)) == 1)
+		if (MQTTV5Deserialize_connect(NULL, &data, buf, buflen) == 1)
 			strindex = MQTTV5StringFormat_connect(strbuf, strbuflen, &data);
 	}
 	break;

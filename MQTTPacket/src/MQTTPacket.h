@@ -32,10 +32,10 @@ extern "C" {
 #include "V3/MQTTFormat.h"
 
 DLLExport int32_t MQTTSerialize_ack(unsigned char* buf, size_t buflen, unsigned char type, unsigned char dup, unsigned short packetid);
-DLLExport int32_t MQTTDeserialize_ack(unsigned char* packettype, unsigned char* dup, unsigned short* packetid, unsigned char* buf, size_t buflen);
+DLLExport int MQTTDeserialize_ack(unsigned char* packettype, unsigned char* dup, unsigned short* packetid, unsigned char* buf, size_t buflen);
 
 DLLExport int MQTTPacket_equals(const MQTTString* a, char* b);
-DLLExport int32_t MQTTPacket_encode(unsigned char* buf, size_t length);
+DLLExport int MQTTPacket_encode(unsigned char* buf, uint32_t length);
 DLLExport int MQTTPacket_read(unsigned char* buf, size_t buflen, int (*getfn)(unsigned char*, int));
 typedef struct {
 	int (*getfn)(void *, unsigned char*, int); /* must return -1 for error, 0 for call again, or the number of bytes read */

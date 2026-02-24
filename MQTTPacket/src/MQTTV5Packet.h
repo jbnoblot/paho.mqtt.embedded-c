@@ -36,11 +36,11 @@ int MQTTLenStringRead(MQTTLenString* lenstring, unsigned char** pptr, const unsi
 
 DLLExport int32_t MQTTV5Serialize_ack(unsigned char* buf, size_t buflen, unsigned char packettype, unsigned char dup, unsigned short packetid,
 	unsigned char reasonCode, MQTTProperties* properties);
-DLLExport int32_t MQTTV5Deserialize_ack(unsigned char* packettype, unsigned char* dup, unsigned short* packetid,
+DLLExport int MQTTV5Deserialize_ack(unsigned char* packettype, unsigned char* dup, unsigned short* packetid,
 	unsigned char *reasonCode, MQTTProperties* properties, unsigned char* buf, size_t buflen);
 
 DLLExport int MQTTPacket_equals(const MQTTString* a, char* b);
-DLLExport int32_t MQTTPacket_encode(unsigned char* buf, size_t length);
+DLLExport int32_t MQTTPacket_encode(unsigned char* buf, uint32_t length);
 DLLExport int MQTTV5Packet_read(unsigned char* buf, size_t buflen, int (*getfn)(unsigned char*, int));
 typedef struct {
 	int (*getfn)(void *, unsigned char*, int); /* must return -1 for error, 0 for call again, or the number of bytes read */

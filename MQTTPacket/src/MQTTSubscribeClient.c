@@ -97,8 +97,9 @@ int32_t MQTTSerialize_subscribe(unsigned char* buf, size_t buflen, unsigned char
 	writeInt(&ptr, packetid);
 
 #if defined(MQTTV5)
-  if (properties && MQTTProperties_write(&ptr, properties) < 0)
+  if (properties && MQTTProperties_write(&ptr, properties) < 0) {
 	  goto exit;
+  }
 #endif
 
 	for (i = 0; i < count; ++i)
@@ -142,17 +143,17 @@ int32_t MQTTV5Deserialize_suback(unsigned short* packetid, MQTTProperties* prope
 		maxcount, count, reasonCodes, buf, buflen);
 }
 
-int32_t MQTTV5Deserialize_subunsuback(int type, unsigned short* packetid, MQTTProperties* properties,
+int MQTTV5Deserialize_subunsuback(int type, unsigned short* packetid, MQTTProperties* properties,
 	  int maxcount, int* count, unsigned char* reasonCodes, unsigned char* buf, size_t buflen)
 #else
-int32_t MQTTDeserialize_suback(unsigned short* packetid, int maxcount, int* count, unsigned char grantedQoSs[],
+int MQTTDeserialize_suback(unsigned short* packetid, int maxcount, int* count, unsigned char grantedQoSs[],
 	unsigned char* buf, size_t buflen)
 #endif
 {
 	unsigned char header;
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
-	int32_t rc = 0;
+	int rc = 0;
 	uint32_t mylen = 0;
 
 	FUNC_ENTRY;

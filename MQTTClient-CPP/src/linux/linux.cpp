@@ -50,8 +50,8 @@ public:
 		sa_family_t family = AF_INET;
 		struct addrinfo *result = NULL;
 		struct addrinfo hints = {0, AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP, 0, NULL, NULL, NULL};
-
-		if ((rc = getaddrinfo(hostname, NULL, &hints, &result)) == 0)
+		rc = getaddrinfo(hostname, NULL, &hints, &result);
+		if (rc == 0)
 		{
 			struct addrinfo* res = result;
 

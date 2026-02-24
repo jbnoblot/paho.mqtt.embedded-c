@@ -113,28 +113,30 @@ int MQTTSerialize_connect(unsigned char* buf, size_t buflen, MQTTPacket_connectD
 
 	flags = 0;
 #if defined(MQTTV5)
-	flags |= (options->cleanstart << 1); /* bit 1 is clean start */
+	flags |= (options->cleanstart << MQTT_CONNECT_CLEAN_START_SHIFT); /* bit 1 is clean start */
 #else
-	flags |= (options->cleansession << 1); /* bit 1 is clean start */
+	flags |= (options->cleansession << MQTT_CONNECT_CLEAN_START_SHIFT); /* bit 1 is clean start */
 #endif
 
-	flags |= (options->willFlag << 2); /* bit 2 is will flag */
-	if (flags & 0x04) /* if will flag is set */
+	flags |= (options->willFlag << MQTT_CONNECT_WILL_FLAG_SHIFT); /* bit 2 is will flag */
+	if (flags & MQTT_CONNECT_WILL_FLAG_MASK) /* if will flag is set */
 	{
-		flags |= (options->will.qos << 3); /* bits 3-4 are will QoS */
-		flags |= (options->will.retained << 5); /* bit 5 is will retained */
+		flags |= (options->will.qos << MQTT_CONNECT_WILL_QOS_SHIFT); /* bits 3-4 are will QoS */
+		flags |= (options->will.retained << MQTT_CONNECT_WILL_RETAIN_SHIFT); /* bit 5 is will retained */
 	}
 
-	if (options->username.cstring || options->username.lenstring.data)
-		flags |= (1 << 6); /* bit 6 is username flag */
-	if (options->password.cstring || options->password.lenstring.data)
-		flags |= (1 << 7); /* bit 7 is password flag */
-
+	if (options->username.cstring || options->username.lenstring.data) {
+		flags |= (1 << MQTT_CONNECT_USERNAME_SHIFT); /* bit 6 is username flag */
+	}
+	if (options->password.cstring || options->password.lenstring.data) {
+		flags |= (1 << MQTT_CONNECT_PASSWORD_SHIFT); /* bit 7 is password flag */
+	}
 	writeChar(&ptr, flags);
 	writeInt(&ptr, options->keepAliveInterval);
 #if defined(MQTTV5)
-	if (options->MQTTVersion == 5)
+	if (options->MQTTVersion == 5) {
 	  MQTTProperties_write(&ptr, connectProperties);
+	}
 #endif
 	writeMQTTString(&ptr, &options->clientID);
 	if (options->willFlag)
@@ -168,7 +170,7 @@ int MQTTSerialize_connect(unsigned char* buf, size_t buflen, MQTTPacket_connectD
   * @param connack_rc returned integer value of the connack return code
   * @param buf the raw buffer data, of the correct length determined by the remaining length field
   * @param len the length in bytes of the data in the supplied buffer
-  * @return error code.  1 is success, 0 is failure
+  * @return error code. 1 is success, 0 is failure
   */
 #if defined(MQTTV5)
 int MQTTV5Deserialize_connack(MQTTProperties* connackProperties, unsigned char* sessionPresent, unsigned char* connack_rc,
@@ -186,21 +188,27 @@ int MQTTDeserialize_connack(unsigned char* sessionPresent, unsigned char* connac
 
 	FUNC_ENTRY;
 	header = readChar(&curdata);
-	if (((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT) != CONNACK)
+	if (((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT) != CONNACK) {
 		goto exit;
-
-	curdata += (rc = MQTTPacket_decodeBuf(curdata, &mylen)); /* read remaining length */
+	}
+	rc = MQTTPacket_decodeBuf(curdata, &mylen);
+	if (rc == 0) { 
+		goto exit;
+	}
+	curdata += rc; /* read remaining length */
 	enddata = curdata + mylen;
-	if (enddata - curdata < 2)
+	if (enddata - curdata < 2) {
 		goto exit;
+	}
 
 	flags = readChar(&curdata);
 	*sessionPresent = flags & MQTT_CONNACK_SESSION_PRESENT_MASK;
 	*connack_rc = readChar(&curdata);
 
 #if defined(MQTTV5)
-	if (connackProperties && !MQTTProperties_read(connackProperties, &curdata, enddata))
+	if (connackProperties && !MQTTProperties_read(connackProperties, &curdata, enddata)) {
 	  goto exit;
+	}
 #endif
 
 	rc = 1;

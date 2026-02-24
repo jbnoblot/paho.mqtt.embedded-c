@@ -62,7 +62,7 @@ int MQTTPacket_checkVersion(MQTTString* protocol, int version)
   * @param len the length in bytes of the data in the supplied buffer
   * @return error code.  1 is success, 0 is failure
   */
-int32_t MQTTV5Deserialize_connect(MQTTProperties* connectProperties, MQTTV5Packet_connectData* data, 
+int MQTTV5Deserialize_connect(MQTTProperties* connectProperties, MQTTV5Packet_connectData* data, 
 	unsigned char* buf, int32_t len)
 #else
 /**
@@ -72,14 +72,14 @@ int32_t MQTTV5Deserialize_connect(MQTTProperties* connectProperties, MQTTV5Packe
   * @param len the length in bytes of the data in the supplied buffer
   * @return error code.  1 is success, 0 is failure
   */
-int32_t MQTTDeserialize_connect(MQTTPacket_connectData* data, unsigned char* buf, int32_t len)
+int MQTTDeserialize_connect(MQTTPacket_connectData* data, unsigned char* buf, int32_t len)
 #endif
 {
 	unsigned char header;
 	unsigned char flags = 0;
 	unsigned char* curdata = buf;
 	unsigned char* enddata = &buf[len];
-	int32_t rc = 0;
+	int rc = 0;
 	MQTTString Protocol;
 	uint32_t mylen = 0;
 
@@ -212,13 +212,13 @@ exit:
 
 
 #if defined(MQTTV5)
-int32_t MQTTV5Deserialize_zero(unsigned char packettype, MQTTProperties* properties, unsigned char* reasonCode,
+int MQTTV5Deserialize_zero(unsigned char packettype, MQTTProperties* properties, unsigned char* reasonCode,
 	    unsigned char* buf, size_t buflen)
 {
 	unsigned char header;
 	unsigned char* curdata = buf;
 	unsigned char* enddata = NULL;
-	int32_t rc = 0;
+	int rc = 0;
 	uint32_t mylen = 0;
 
 	FUNC_ENTRY;
@@ -252,29 +252,30 @@ exit:
   * @return error code.  1 is success, 0 is failure
   */
 #if defined(MQTTV5)
-int32_t MQTTV5Deserialize_disconnect(MQTTProperties* properties, unsigned char* reasonCode,
+int MQTTV5Deserialize_disconnect(MQTTProperties* properties, unsigned char* reasonCode,
 	    unsigned char* buf, size_t buflen)
 {
 	return MQTTV5Deserialize_zero(DISCONNECT, properties, reasonCode, buf, buflen);
 }
 
-int32_t MQTTV5Deserialize_auth(MQTTProperties* properties, unsigned char* reasonCode,
+int MQTTV5Deserialize_auth(MQTTProperties* properties, unsigned char* reasonCode,
 	    unsigned char* buf, size_t buflen)
 {
 	return MQTTV5Deserialize_zero(AUTH, properties, reasonCode, buf, buflen);
 }
 #else
-int32_t MQTTDeserialize_disconnect(unsigned char* buf, size_t buflen)
+int MQTTDeserialize_disconnect(unsigned char* buf, size_t buflen)
 {
 	unsigned char type = 0;
 	unsigned char dup = 0;
 	unsigned short packetid = 0;
-	int32_t rc = 0;
+	int rc = 0;
 
 	FUNC_ENTRY;
 	rc = MQTTDeserialize_ack(&type, &dup, &packetid, buf, buflen);
-	if (type == DISCONNECT)
+	if (type == DISCONNECT) {
 		rc = 1;
+	}
 	FUNC_EXIT_RC(rc);
 	return rc;
 }

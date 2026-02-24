@@ -115,7 +115,7 @@ extern "C"
         /// @brief The MQTT message payload.
         void *payload;
         /// @brief The MQTT message `payload` length.
-        size_t payloadlen;
+        uint32_t payloadlen;
     } MQTTMessage;
 
     /**
@@ -142,8 +142,8 @@ extern "C"
         /// @brief The MQTTv5 reason code.
         enum MQTTReasonCodes reasonCode;
 #else
-        /// @brief The MQTTv3 reason code.
-        unsigned char rc;
+    /// @brief The MQTTv3 reason code.
+    unsigned char rc;
 #endif /* MQTTV5 */
         /// @brief The MQTT session present flag.
         unsigned char sessionPresent;
@@ -161,8 +161,8 @@ extern "C"
         /// @brief The MQTT reason code.
         enum MQTTReasonCodes reasonCode;
 #else
-        /// @brief The MQTT granted QoS or `MQTTQOS_SUBFAIL` on failure.
-        enum MQTTQoS grantedQoS;
+    /// @brief The MQTT granted QoS or `MQTTQOS_SUBFAIL` on failure.
+    enum MQTTQoS grantedQoS;
 #endif /* MQTTV5 */
     } MQTTSubackData;
 
@@ -211,33 +211,46 @@ extern "C"
      */
     typedef struct MQTTClient
     {
-        unsigned int command_timeout_ms;
-        size_t buf_size;
-        size_t readbuf_size;
+        /* 1. Pointeurs (4 octets sur ARM, 2 sur AVR) */
         unsigned char *buf;
         unsigned char *readbuf;
+        Network *ipstack;
+        void (*defaultMessageHandler)(MessageData *);
+    #if defined(MQTTV5)
+            MQTTProperties *recvProperties;
+    #endif
+
+        /* 2. Tailles et Entiers Larges (4 octets sur ARM, 2 sur AVR) */
+        size_t buf_size;
+        size_t readbuf_size;
+        unsigned int command_timeout_ms;
         unsigned int keepAliveInterval;
-        int isconnected;
-#if defined(MQTTV5)
-        int cleanstart;
-        MQTTProperties *recvProperties;
-#else
-        int cleansession;
-#endif /* MQTTV5 */
-        unsigned short next_packetid;
-        char ping_outstanding;
+
+        /* 3. Structures complexes (Timers / Mutex) */
+        Timer last_sent;
+        Timer last_received;
+        Timer pingresp_timer;
+
+        /* 4. Tableau de Handlers (Pointeurs + Poids lourd) */
         struct MessageHandlers
         {
             const char *topicFilter;
             void (*fp)(MessageData *);
-        } messageHandlers[MAX_MESSAGE_HANDLERS]; /* Message handlers are indexed by subscription topic */
+        } messageHandlers[MAX_MESSAGE_HANDLERS];
 
-        void (*defaultMessageHandler)(MessageData *);
+        /* 5. Types 16 bits */
+        uint16_t next_packetid;
 
-        Network *ipstack;
-        Timer last_sent;
-        Timer last_received;
-        Timer pingresp_timer;
+        /* 6. Types 8 bits (Regroupés à la fin pour éviter le padding) */
+        uint8_t isconnected;
+        uint8_t ping_outstanding;
+#if defined(MQTTV5)
+        uint8_t cleanstart;
+        uint8_t truncateRecvProperties;
+#else
+        uint8_t cleansession;
+#endif
+
 #if defined(MQTT_TASK)
         Mutex mutex;
         Thread thread;
@@ -249,6 +262,26 @@ extern "C"
  *
  */
 #define DefaultClient {0, 0, 0, 0, NULL, NULL, 0, 0, 0}
+#if defined(MQTTV5)
+#define DEFAULT_PROPERTIES_INIT .recvProperties = NULL, .cleanstart = 0,
+#else
+#define DEFAULT_PROPERTIES_INIT .cleansession = 0,
+#endif
+
+#define DefaultClient {                    \
+    .buf = NULL,                           \
+    .readbuf = NULL,                       \
+    .buf_size = 0,                         \
+    .readbuf_size = 0,                     \
+    .command_timeout_ms = 30000,           \
+    .keepAliveInterval = 60,               \
+    .isconnected = 0,                      \
+    .next_packetid = 1,                    \
+    .ping_outstanding = 0,                 \
+    DEFAULT_PROPERTIES_INIT                \
+        .messageHandlers = {{NULL, NULL}}, \
+    .defaultMessageHandler = NULL,         \
+    .ipstack = NULL}
 
     /**
      * @brief Create an `MQTTClient` object.
@@ -377,7 +410,7 @@ extern "C"
      * @param client The `MQTTClient` object to use.
      * @return Non-zero if the client is connected, zero otherwise.
      */
-    DLLExport int MQTTIsConnected(MQTTClient *client);
+    DLLExport int MQTTIsConnected(const MQTTClient *client);
 
 #if defined(MQTT_TASK)
     /**

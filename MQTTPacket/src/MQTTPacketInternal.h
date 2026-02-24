@@ -102,12 +102,12 @@ typedef struct
 int MQTTstrlen(const MQTTString* mqttstring);
 
 int MQTTPacket_VBIlen(uint32_t rem_len);
-size_t MQTTPacket_len(uint32_t rem_len);
+uint32_t MQTTPacket_len(uint32_t rem_len);
 int MQTTPacket_decode(int (*getcharfn)(unsigned char*, int), uint32_t* value);
 int MQTTPacket_decodeBuf(unsigned char* buf, uint32_t* value);
 
 int readInt(unsigned char** pptr);
-char readChar(unsigned char* *pptr);
+char readChar(unsigned char** pptr);
 void writeChar(unsigned char** pptr, char c);
 void writeInt(unsigned char** pptr, int anInt);
 void writeUInt16(unsigned char** pptr, uint16_t anInt);
