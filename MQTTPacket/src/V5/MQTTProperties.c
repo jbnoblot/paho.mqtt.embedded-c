@@ -244,25 +244,49 @@ int MQTTProperty_read(MQTTProperty* prop, unsigned char** pptr, const unsigned c
   return len + 1; /* 1 byte for identifier */
 }
 
-
 int MQTTProperties_read(MQTTProperties* properties, unsigned char** pptr, const unsigned char* enddata)
 {
-  int rc = 0;
-  int remlength = 0;
+    uint32_t remlength = 0;
+    properties->count = 0;
 
-  properties->count = 0;
-	if (enddata - (*pptr) > 0) /* enough length to read the VBI? */
-  {
-    *pptr += MQTTPacket_decodeBuf(*pptr, &remlength);
-    properties->length = remlength;
-    while (properties->count < properties->max_count && remlength > 0)
-    {
-      remlength -= MQTTProperty_read(&properties->array[properties->count], pptr, enddata);
-      properties->count++;
+    // 1. Décodage sécurisé de la longueur des propriétés
+    if (enddata - (*pptr) < 1) {
+      return -1; 
     }
-    if (remlength == 0)
-      rc = 1; /* data read successfully */
-  }
+    *pptr += MQTTPacket_decodeBuf(*pptr, &remlength);
+    
+    properties->length = remlength;
+    unsigned char* expected_end = *pptr + remlength;
 
-  return rc;
+    // Vérification de sécurité : le bloc de propriétés dépasse-t-il le buffer ?
+    if (expected_end > enddata) {
+      return -1;
+    }
+
+    // 2. Lecture des propriétés
+    while (*pptr < expected_end)
+    {
+        if (properties->count < properties->max_count)
+        {
+            // On a de la place, on stocke
+            MQTTProperty_read(&properties->array[properties->count], pptr, expected_end);
+            properties->count++;
+        }
+        else if(properties->truncateProperties)
+        {
+            // PLUS DE PLACE : On doit "skipper" la propriété sans la stocker
+            // pour que le pointeur pptr avance quand même jusqu'au bout !
+            MQTTProperty dummy_prop;
+            MQTTProperty_read(&dummy_prop, pptr, expected_end);
+            // On ne l'ajoute pas au tableau, on veut juste avancer
+        } else {
+            // PLUS DE PLACE et pas de truncation : on arrête la lecture, c'est une erreur
+            return MQTTCLIENT_BUFFER_OVERFLOW;
+        }
+    }
+
+    // 3. recalage forcé (sécurité ultime)
+    *pptr = expected_end; 
+
+    return 1; // Succès, même si on en a ignoré certaines
 }

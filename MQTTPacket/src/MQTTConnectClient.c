@@ -170,7 +170,7 @@ int MQTTSerialize_connect(unsigned char* buf, size_t buflen, MQTTPacket_connectD
   * @param connack_rc returned integer value of the connack return code
   * @param buf the raw buffer data, of the correct length determined by the remaining length field
   * @param len the length in bytes of the data in the supplied buffer
-  * @return error code. 1 is success, 0 is failure
+  * @return error code. 1 is success, 0 is failure, -1 or -2 if properties add fail
   */
 #if defined(MQTTV5)
 int MQTTV5Deserialize_connack(MQTTProperties* connackProperties, unsigned char* sessionPresent, unsigned char* connack_rc,
@@ -206,8 +206,12 @@ int MQTTDeserialize_connack(unsigned char* sessionPresent, unsigned char* connac
 	*connack_rc = readChar(&curdata);
 
 #if defined(MQTTV5)
-	if (connackProperties && !MQTTProperties_read(connackProperties, &curdata, enddata)) {
-	  goto exit;
+	if (connackProperties)
+	{
+		rc = MQTTProperties_read(connackProperties, &curdata, enddata);
+		if (rc < 0) {
+		  goto exit;
+		}
 	}
 #endif
 
@@ -261,8 +265,9 @@ int MQTTSerialize_zero(unsigned char* buf, size_t buflen, unsigned char packetty
 	if (reasonCode >= 0 && reasonCode <= 162)
 	{
 		writeChar(&ptr, reasonCode); /* must have reasonCode before properties */
-		if (properties)
+		if (properties) {
 			MQTTProperties_write(&ptr, properties);
+		}
 	}
 #endif
 	rc = ptr - buf;

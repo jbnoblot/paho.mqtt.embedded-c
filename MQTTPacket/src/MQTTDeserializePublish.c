@@ -36,7 +36,7 @@
  * @param payloadlen returned integer - the length of the MQTT payload
  * @param buf the raw buffer data, of the correct length determined by the remaining length field
  * @param buflen the length in bytes of the data in the supplied buffer
- * @return error code.  1 is success
+ * @return error code. 1 is success
  */
 #if defined(MQTTV5)
 int MQTTV5Deserialize_publish(unsigned char *dup, unsigned char *qos, unsigned char *retained, unsigned short *packetid, MQTTString *topicName,
@@ -76,9 +76,12 @@ int MQTTDeserialize_publish(unsigned char *dup, unsigned char *qos, unsigned cha
 	}
 
 #if defined(MQTTV5)
-	if (properties && !MQTTProperties_read(properties, &curdata, enddata))
+	if (properties)
 	{
-		goto exit;
+		rc = MQTTProperties_read(properties, &curdata, enddata);
+		if (rc < 0) {
+		  goto exit;
+		}
 	}
 #endif
 

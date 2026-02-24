@@ -82,11 +82,12 @@ typedef struct MQTTProperties
 {
   int count;           /**< number of property entries in the array */
   int max_count;       /**< max number of properties that the currently allocated array can store */
-  int length;          /**< mbi: byte length of all properties */
+  uint32_t length;          /**< mbi: byte length of all properties */
+  char truncateProperties; /** If true, the MQTTv5 properties will be truncated if they do not fit in buffer. */
   MQTTProperty *array; /**< array of properties */
 } MQTTProperties;
 
-#define MQTTProperties_initializer {0, 0, 0, NULL}
+#define MQTTProperties_initializer {0, 0, 0, 0, NULL}
 
 DLLExport int MQTTProperties_len(const MQTTProperties* props);
 
