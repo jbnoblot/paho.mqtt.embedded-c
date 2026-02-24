@@ -120,8 +120,12 @@ int MQTTDeserialize_ack(unsigned char *packettype, unsigned char *dup, unsigned 
 	header = readChar(&curdata);
 	*dup = (header & MQTT_HEADER_DUP_MASK) != 0;
 	*packettype = (header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT;
-
-	curdata += (rc = MQTTPacket_decodeBuf(curdata, &mylen)); /* read remaining length */
+	rc = MQTTPacket_decodeBuf(curdata, &mylen); /* read remaining length */
+	if (rc == 0)
+	{
+		goto exit;
+	}
+	curdata += rc;
 	enddata = curdata + mylen;
 
 	if (enddata - curdata < 2)
@@ -147,7 +151,8 @@ int MQTTDeserialize_ack(unsigned char *packettype, unsigned char *dup, unsigned 
 	{
 		if (enddata == curdata)
 		{
-			properties->length = properties->count = 0; /* signal that no properties were received */
+			properties->length = 0;
+			properties->count = 0; /* signal that no properties were received */
 		}
 		else
 		{
