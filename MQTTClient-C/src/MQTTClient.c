@@ -320,26 +320,35 @@ int cycle(MQTTClient *c, const Timer *timer)
 
         unsigned char intQoS;
         msg.payloadlen = 0; /* this is a size_t, but deserialize publish sets this as int */
-#if defined(MQTTV5) {
+#if defined(MQTTV5)
         rc = MQTTV5Deserialize_publish(&msg.dup, &intQoS, &msg.retained, &msg.id, &topicName,
                                        c->recvProperties, (unsigned char **)&msg.payload, (int *)&msg.payloadlen, c->readbuf, c->readbuf_size);
-    }
 #else
-        {
-            rc = MQTTDeserialize_publish(&msg.dup, &intQoS, &msg.retained, &msg.id, &topicName,
-                                         (unsigned char **)&msg.payload, (int *)&msg.payloadlen, c->readbuf, c->readbuf_size);
-        }
+        rc = MQTTDeserialize_publish(&msg.dup, &intQoS, &msg.retained, &msg.id, &topicName,
+                                     (unsigned char **)&msg.payload, (int *)&msg.payloadlen, c->readbuf, c->readbuf_size);
+#endif
         if (rc != 1)
         {
             goto exit;
         }
         msg.qos = (enum MQTTQoS)intQoS;
-        deliverMessage(c, &topicName, &msg);
+        rc = deliverMessage(c, &topicName, &msg);
         if (msg.qos != MQTTQOS_0)
         {
+            #if defined(MQTTV5)
+                if (rc != MQTTCLIENT_SUCCESS) {
+                    
+                }
+            #endif
+
+
             if (msg.qos == MQTTQOS_1)
             {
+#if defined(MQTTV5)
+                len = MQTTV5Serialize_ack(c->buf, c->buf_size, PUBACK, 0, msg.id, 0, NULL);
+#else
                 len = MQTTSerialize_ack(c->buf, c->buf_size, PUBACK, 0, msg.id);
+#endif
             }
             else if (msg.qos == MQTTQOS_2)
             {
@@ -360,50 +369,51 @@ int cycle(MQTTClient *c, const Timer *timer)
         }
         break;
     }
-case PUBREC:
-case PUBREL:
-{
-    unsigned short mypacketid;
-    unsigned char dup, type;
-    if (MQTTDeserialize_ack(&type, &dup, &mypacketid, c->readbuf, c->readbuf_size) != 1)
-        rc = MQTTCLIENT_FAILURE;
-    else if ((len = MQTTSerialize_ack(c->buf, c->buf_size,
-                                      (packet_type == PUBREC) ? PUBREL : PUBCOMP, 0, mypacketid)) <= 0)
-        rc = MQTTCLIENT_FAILURE;
-    else if ((rc = sendPacket(c, len, timer)) != MQTTCLIENT_SUCCESS) // send the PUBREL packet
-        rc = MQTTCLIENT_FAILURE;                                     // there was a problem
-    if (rc == MQTTCLIENT_FAILURE)
-        goto exit; // there was a problem
-    break;
-}
+    case PUBREC:
+    case PUBREL:
+    {
+        unsigned short mypacketid;
+        unsigned char dup, type;
+        if (MQTTDeserialize_ack(&type, &dup, &mypacketid, c->readbuf, c->readbuf_size) != 1)
+            rc = MQTTCLIENT_FAILURE;
+        else if ((len = MQTTSerialize_ack(c->buf, c->buf_size,
+                                          (packet_type == PUBREC) ? PUBREL : PUBCOMP, 0, mypacketid)) <= 0)
+            rc = MQTTCLIENT_FAILURE;
+        else if ((rc = sendPacket(c, len, timer)) != MQTTCLIENT_SUCCESS) // send the PUBREL packet
+            rc = MQTTCLIENT_FAILURE;                                     // there was a problem
+        if (rc == MQTTCLIENT_FAILURE)
+            goto exit; // there was a problem
+        break;
+    }
 
-case PUBCOMP:
-    break;
-case PINGRESP:
-    c->ping_outstanding = 0;
-    break;
+    case PUBCOMP:
+        break;
+    case PINGRESP:
+        c->ping_outstanding = 0;
+        break;
 #if defined(MQTTV5)
-case DISCONNECT:
-    // TODO: implement DISCONNECTv5 and callback to expose reason code and properties.
-    break;
+    case DISCONNECT:
+        // TODO: implement DISCONNECTv5 and callback to expose reason code and properties.
+        break;
 #endif
-}
+    }
 
-if (keepalive(c) != MQTTCLIENT_SUCCESS)
-{
-    // check only keepalive MQTTCLIENT_FAILURE status so that previous MQTTCLIENT_FAILURE status can be considered as FAULT
-    rc = MQTTCLIENT_FAILURE;
-}
+    if (keepalive(c) != MQTTCLIENT_SUCCESS)
+    {
+        // check only keepalive MQTTCLIENT_FAILURE status so that previous MQTTCLIENT_FAILURE status can be considered as FAULT
+        rc = MQTTCLIENT_FAILURE;
+    }
 
-exit : if (rc == MQTTCLIENT_SUCCESS)
-{
-    rc = packet_type;
-}
-else if (c->isconnected)
-{
-    MQTTCloseSession(c);
-}
-return rc;
+exit:
+    if (rc == MQTTCLIENT_SUCCESS)
+    {
+        rc = packet_type;
+    }
+    else if (c->isconnected)
+    {
+        MQTTCloseSession(c);
+    }
+    return rc;
 }
 
 int MQTTYield(MQTTClient *c, int timeout_ms)

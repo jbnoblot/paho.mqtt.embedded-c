@@ -274,11 +274,7 @@ int MQTTProperties_read(MQTTProperties* properties, unsigned char** pptr, const 
         }
         else if(properties->truncateProperties)
         {
-            // PLUS DE PLACE : On doit "skipper" la propriété sans la stocker
-            // pour que le pointeur pptr avance quand même jusqu'au bout !
-            MQTTProperty dummy_prop;
-            MQTTProperty_read(&dummy_prop, pptr, expected_end);
-            // On ne l'ajoute pas au tableau, on veut juste avancer
+            break;
         } else {
             // PLUS DE PLACE et pas de truncation : on arrête la lecture, c'est une erreur
             return MQTTCLIENT_BUFFER_OVERFLOW;

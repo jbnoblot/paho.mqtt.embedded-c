@@ -40,10 +40,10 @@
  */
 #if defined(MQTTV5)
 int MQTTV5Deserialize_publish(unsigned char *dup, unsigned char *qos, unsigned char *retained, unsigned short *packetid, MQTTString *topicName,
-								  MQTTProperties *properties, unsigned char **payload, int32_t *payloadlen, unsigned char *buf, size_t buflen)
+							  MQTTProperties *properties, unsigned char **payload, int32_t *payloadlen, unsigned char *buf, size_t buflen)
 #else
 int MQTTDeserialize_publish(unsigned char *dup, unsigned char *qos, unsigned char *retained, unsigned short *packetid, MQTTString *topicName,
-								unsigned char **payload, int32_t *payloadlen, unsigned char *buf, size_t buflen)
+							unsigned char **payload, int32_t *payloadlen, unsigned char *buf, size_t buflen)
 #endif
 {
 	unsigned char header;
@@ -79,8 +79,9 @@ int MQTTDeserialize_publish(unsigned char *dup, unsigned char *qos, unsigned cha
 	if (properties)
 	{
 		rc = MQTTProperties_read(properties, &curdata, enddata);
-		if (rc < 0) {
-		  goto exit;
+		if (rc < 0)
+		{
+			goto exit;
 		}
 	}
 #endif
@@ -104,7 +105,7 @@ exit:
  */
 #if defined(MQTTV5)
 int MQTTV5Deserialize_ack(unsigned char *packettype, unsigned char *dup, unsigned short *packetid,
-							  unsigned char *reasonCode, MQTTProperties *properties, unsigned char *buf, size_t buflen)
+						  unsigned char *reasonCode, MQTTProperties *properties, unsigned char *buf, size_t buflen)
 #else
 int MQTTDeserialize_ack(unsigned char *packettype, unsigned char *dup, unsigned short *packetid, unsigned char *buf, size_t buflen)
 #endif
@@ -148,9 +149,13 @@ int MQTTDeserialize_ack(unsigned char *packettype, unsigned char *dup, unsigned 
 		{
 			properties->length = properties->count = 0; /* signal that no properties were received */
 		}
-		else if (!MQTTProperties_read(properties, &curdata, enddata))
+		else
 		{
-			goto exit;
+			rc = MQTTProperties_read(properties, &curdata, enddata);
+			if (rc < 0)
+			{
+				goto exit;
+			}
 		}
 	}
 #endif

@@ -67,8 +67,14 @@ int MQTTDeserialize_subscribe(unsigned char *dup, unsigned short *packetid, int 
 	*packetid = readInt(&curdata);
 
 #if defined(MQTTV5)
-	if (properties && !MQTTProperties_read(properties, &curdata, enddata))
-		goto exit;
+	if (properties)
+	{
+		rc = MQTTProperties_read(properties, &curdata, enddata);
+		if (rc < 0)
+		{
+			goto exit;
+		}
+	}
 #endif
 
 	*count = 0;

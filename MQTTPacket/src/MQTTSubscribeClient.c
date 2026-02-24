@@ -173,8 +173,14 @@ int MQTTDeserialize_suback(unsigned short* packetid, int maxcount, int* count, u
 	*packetid = readInt(&curdata);
 
 #if defined(MQTTV5)
-	if (properties && !MQTTProperties_read(properties, &curdata, enddata))
-	  goto exit;
+		if (properties)
+	{
+		rc = MQTTProperties_read(properties, &curdata, enddata);
+		if (rc < 0)
+		{
+			goto exit;
+		}
+	}
 #endif
   if (maxcount > 0)
 	{
