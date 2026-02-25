@@ -94,6 +94,8 @@ exit:
 	return (int)rc;
 }
 
+
+
 /**
  * Deserializes the supplied (wire) buffer into an ack
  * @param packettype returned integer - the MQTT packet type
@@ -101,7 +103,7 @@ exit:
  * @param packetid returned integer - the MQTT packet identifier
  * @param buf the raw buffer data, of the correct length determined by the remaining length field
  * @param buflen the length in bytes of the data in the supplied buffer
- * @return error code.  1 is success, 0 is failure
+ * @return error code.  1 is success, 0 is failure, -2 properties overflow but no truncation, -1 properties overflow with truncation
  */
 #if defined(MQTTV5)
 int MQTTV5Deserialize_ack(unsigned char *packettype, unsigned char *dup, unsigned short *packetid,

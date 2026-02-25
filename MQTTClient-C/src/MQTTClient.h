@@ -36,7 +36,7 @@ extern "C"
 #endif
 
 #if defined(MQTTV5)
-#include "MQTTV5Packet.h"
+#include "../../MQTTPacket/src/MQTTV5Packet.h"
 #else
 #include "MQTTPacket.h"
 #endif /* MQTTV5 */
@@ -268,7 +268,11 @@ extern "C"
 #define DEFAULT_PROPERTIES_INIT .cleansession = 0,
 #endif
 
-#define DefaultClient {                    \
+/**
+ * @brief Default initializer for an MQTTClient structure.
+ *
+ */
+#define DefaultClientNG {                    \
     .buf = NULL,                           \
     .readbuf = NULL,                       \
     .buf_size = 0,                         \
@@ -282,7 +286,7 @@ extern "C"
         .messageHandlers = {{NULL, NULL}}, \
     .defaultMessageHandler = NULL,         \
     .ipstack = NULL}
-
+#else
     /**
      * @brief Create an `MQTTClient` object.
      *

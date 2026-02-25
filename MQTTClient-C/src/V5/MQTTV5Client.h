@@ -21,7 +21,7 @@
 
 #include <stdbool.h>
 #include "../MQTTClient.h"
-#include "../../../MQTTV5Packet/src/V5/MQTTV5Packet.h"
+#include "../../../MQTTPacket/src/MQTTV5Packet.h"
 
 
 /**
@@ -111,7 +111,7 @@ DLLExport int MQTTV5Publish(MQTTClient* client, const char* topicName, MQTTMessa
  * @param ack Acknowledgement information (from either a PUBACK or PUBCOMP message).
  * @return An #MQTTClientReturnCode indicating success or failure.
  */
-DLLExport int MQTTV5PublishWithResults(MQTTClient* client, const char* topic, MQTTMessage* message, 
+DLLExport int MQTTV5PublishWithResults(MQTTClient* client, const char* topicName, MQTTMessage* message, 
   MQTTProperties* properties, MQTTPubDoneData* ack);
 
 /**

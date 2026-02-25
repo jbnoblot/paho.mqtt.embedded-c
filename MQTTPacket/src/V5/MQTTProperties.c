@@ -244,6 +244,13 @@ int MQTTProperty_read(MQTTProperty* prop, unsigned char** pptr, const unsigned c
   return len + 1; /* 1 byte for identifier */
 }
 
+/**
+ * read the properties from a packet buffer into the supplied structure, up to the length specified in the packet
+ * @param properties the structure into which the properties will be read
+ * @param pptr pointer to the buffer - move the pointer as we read data
+ * @param enddata pointer to the end of the buffer, for security checking
+ * @return -1 fail, -2 properties overflow but no truncation, 1 success (even if some properties were ignored due to overflow)
+ */
 int MQTTProperties_read(MQTTProperties* properties, unsigned char** pptr, const unsigned char* enddata)
 {
     uint32_t remlength = 0;
@@ -277,7 +284,7 @@ int MQTTProperties_read(MQTTProperties* properties, unsigned char** pptr, const 
             break;
         } else {
             // PLUS DE PLACE et pas de truncation : on arrête la lecture, c'est une erreur
-            return MQTTCLIENT_BUFFER_OVERFLOW;
+            return -2;
         }
     }
 
