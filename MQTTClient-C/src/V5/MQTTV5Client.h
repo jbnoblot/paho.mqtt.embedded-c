@@ -202,13 +202,13 @@ DLLExport int MQTTV5UnsubscribeWithResults(MQTTClient* client, const char* topic
  * @param properties The MQTTv5 disconnect properties.
  * @return An #MQTTClientReturnCode indicating success or failure.
  */
-DLLExport int MQTTV5Disconnect(MQTTClient* client, unsigned char reasonCode, MQTTProperties* properties);
+DLLExport int MQTTV5Disconnect(MQTTClient* client, unsigned char reasonCode, const MQTTProperties* properties);
 
 /**
  * @brief Set or remove an MQTTv5 disconnect receive handler.
  * 
  * @param client The `MQTTClient` object to use.
- * @param disconnectHandler The AUTH receive handler function or NULL to remove.
+ * @param disconnectHandler The DISCONNECT receive handler function or NULL to remove.
  * @return An #MQTTClientReturnCode indicating success or failure.
  */
 DLLExport int MQTTV5SetDisconnectHandler(MQTTClient* client, controlHandler disconnectHandler);

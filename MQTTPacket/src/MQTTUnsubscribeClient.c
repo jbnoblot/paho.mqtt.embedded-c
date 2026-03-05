@@ -127,7 +127,8 @@ int MQTTV5Deserialize_unsuback(unsigned short* packetid, MQTTProperties* propert
 int MQTTDeserialize_unsuback(unsigned short* packetid, unsigned char* buf, size_t buflen)
 #endif
 {
-#if !defined(MQTTV5)
+#if defined(MQTTV5)
+#else
 	unsigned char type = 0;
 	unsigned char dup = 0;
 #endif
@@ -137,6 +138,7 @@ int MQTTDeserialize_unsuback(unsigned short* packetid, unsigned char* buf, size_
 #if defined(MQTTV5)
 	rc = MQTTV5Deserialize_subunsuback(UNSUBACK, packetid, properties,
 		                       maxcount, count, reasonCodes, buf, buflen);
+	//TODO: V5 deserialization and reason code adapter.
 #else
 	rc = MQTTDeserialize_ack(&type, &dup, packetid, buf, buflen);
 	if (type == UNSUBACK) {

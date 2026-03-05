@@ -342,7 +342,6 @@ int cycle(MQTTClient *c, const Timer *timer)
                 reasonCode = MQTTREASONCODE_NO_MATCHING_SUBSCRIBERS;
             }
 #endif
-
             if (msg.qos == MQTTQOS_1)
             {
 #if defined(MQTTV5)
@@ -411,8 +410,22 @@ int cycle(MQTTClient *c, const Timer *timer)
         c->ping_outstanding = 0;
         break;
 #if defined(MQTTV5)
+    case AUTH:
+        unsigned short mypacketid;
+        unsigned char dup;
+        unsigned char type;
+        unsigned char reasonCode;
+        rc = MQTTV5Deserialize_ack(&type, &dup, &mypacketid, &reasonCode, c->recvProperties, c->readbuf, c->readbuf_size);
+        c->authHandler(c->recvProperties, reasonCode, mypacketid);
+        break;
     case DISCONNECT:
+        unsigned short mypacketid;
+        unsigned char dup;
+        unsigned char type;
+        unsigned char reasonCode;
+        rc = MQTTV5Deserialize_ack(&type, &dup, &mypacketid, &reasonCode, c->recvProperties, c->readbuf, c->readbuf_size);
         // TODO: implement DISCONNECTv5 and callback to expose reason code and properties.
+        c->disconnectHandler(c->recvProperties, reasonCode, mypacketid);
         break;
 #endif
     }
@@ -616,7 +629,11 @@ int MQTTConnect(MQTTClient *c, MQTTPacket_connectData *options)
 }
 #endif
 
+#if defined(MQTTV5)
+int MQTTV5SetMessageHandler(MQTTClient *c, const char *topicFilter, messageHandler messageHandler)
+#else
 int MQTTSetMessageHandler(MQTTClient *c, const char *topicFilter, messageHandler messageHandler)
+#endif
 {
     int rc = MQTTCLIENT_FAILURE;
     int i = -1;
@@ -658,8 +675,13 @@ int MQTTSetMessageHandler(MQTTClient *c, const char *topicFilter, messageHandler
     return rc;
 }
 
-int MQTTSubscribeWithResults(MQTTClient *c, const char *topicFilter, enum MQTTQoS qos,
+#if defined(MQTTV5)
+int MQTTV5SubscribeWithResults(MQTTClient *c, const char *topicFilter, enum MQTTQoS requestedQoS,
+                               MQTTProperties *properties, MQTTSubscribe_options options, messageHandler messageHandler, MQTTSubackData *data)
+#else
+int MQTTSubscribeWithResults(MQTTClient *c, const char *topicFilter, enum MQTTQoS requestedQoS,
                              messageHandler messageHandler, MQTTSubackData *data)
+#endif
 {
     int rc = MQTTCLIENT_FAILURE;
     Timer timer;
@@ -676,7 +698,7 @@ int MQTTSubscribeWithResults(MQTTClient *c, const char *topicFilter, enum MQTTQo
     TimerInit(&timer);
     TimerCountdownMS(&timer, c->command_timeout_ms);
 
-    unsigned char _qos = qos;
+    unsigned char _qos = requestedQoS;
     len = MQTTSerialize_subscribe(c->buf, c->buf_size, 0, getNextPacketId(c), 1, &topic, &_qos);
     if (len <= 0)
     {
@@ -694,14 +716,25 @@ int MQTTSubscribeWithResults(MQTTClient *c, const char *topicFilter, enum MQTTQo
         unsigned char grantedQoS = MQTTQOS_0;
 
 #if defined(MQTTV5)
-// TODO: V5 deserialization and QoS adapter.
+        int retval = MQTTV5Deserialize_suback(&mypacketid, properties, 1, &count, &grantedQoS, c->readbuf, c->readbuf_size);
+        if (retval == 1)
+        {
+            data->reasonCode = grantedQoS;
+            if (data->reasonCode != MQTTREASONCODE_UNSPECIFIED_ERROR && data->reasonCode != MQTTREASONCODE_IMPLEMENTATION_SPECIFIC_ERROR)
+            {
+                rc = MQTTV5SetMessageHandler(c, topicFilter, messageHandler);
+            }
+        }
+        // TODO: V5 deserialization and QoS adapter.
 #else
         int retval = MQTTDeserialize_suback(&mypacketid, 1, &count, &grantedQoS, c->readbuf, c->readbuf_size);
         data->grantedQoS = grantedQoS;
         if (retval == 1)
         {
             if (data->grantedQoS != 0x80)
+            {
                 rc = MQTTSetMessageHandler(c, topicFilter, messageHandler);
+            }
         }
 #endif /* MQTTV5 */
     }
@@ -717,14 +750,27 @@ exit:
     return rc;
 }
 
-int MQTTSubscribe(MQTTClient *c, const char *topicFilter, enum MQTTQoS qos,
+#if defined(MQTTV5)
+int MQTTV5Subscribe(MQTTClient *client, const char *topicFilter, enum MQTTQoS requestedQoS,
+                    MQTTProperties *properties, MQTTSubscribe_options options, messageHandler messageHandler)
+{
+    MQTTSubackData data;
+    return MQTTSubscribeWithResults(c, topicFilter, requestedQoS, messageHandler, &data);
+}
+#else
+int MQTTSubscribe(MQTTClient *c, const char *topicFilter, enum MQTTQoS requestedQoS,
                   messageHandler messageHandler)
 {
     MQTTSubackData data;
-    return MQTTSubscribeWithResults(c, topicFilter, qos, messageHandler, &data);
+    return MQTTSubscribeWithResults(c, topicFilter, requestedQoS, messageHandler, &data);
 }
+#endif
 
+#if defined(MQTTV5)
+int MQTTV5Unsubscribe(MQTTClient *c, const char *topicFilter, MQTTProperties *properties)
+#else
 int MQTTUnsubscribe(MQTTClient *c, const char *topicFilter)
+#endif
 {
     int rc = MQTTCLIENT_FAILURE;
     Timer timer;
@@ -741,7 +787,12 @@ int MQTTUnsubscribe(MQTTClient *c, const char *topicFilter)
     TimerInit(&timer);
     TimerCountdownMS(&timer, c->command_timeout_ms);
 
-    if ((len = MQTTSerialize_unsubscribe(c->buf, c->buf_size, 0, getNextPacketId(c), 1, &topic)) <= 0)
+#if defined(MQTTV5)
+    len = MQTTV5Serialize_unsubscribe(c->buf, c->buf_size, 0, getNextPacketId(c), properties, 1, &topic);
+#else
+    len = MQTTSerialize_unsubscribe(c->buf, c->buf_size, 0, getNextPacketId(c), 1, &topic);
+#endif
+    if (len <= 0)
         goto exit;
     if ((rc = sendPacket(c, len, &timer)) != MQTTCLIENT_SUCCESS) // send the subscribe packet
         goto exit;                                               // there was a problem
@@ -749,10 +800,21 @@ int MQTTUnsubscribe(MQTTClient *c, const char *topicFilter)
     if (waitfor(c, UNSUBACK, &timer) == UNSUBACK)
     {
         unsigned short mypacketid; // should be the same as the packetid above
-        if (MQTTDeserialize_unsuback(&mypacketid, c->readbuf, c->readbuf_size) == 1)
+#if defined(MQTTV5)
+        int unsubcount = 0;
+        unsigned char reasonCode = -1;
+        len = MQTTV5Deserialize_unsuback(&mypacketid, properties, 1, &unsubcount, &reasonCode, c->readbuf, c->readbuf_size);
+#else
+        len = MQTTDeserialize_unsuback(&mypacketid, c->readbuf, c->readbuf_size);
+#endif
+        if (len == 1)
         {
-            /* remove the subscription message handler associated with this topic, if there is one */
+#if defined(MQTTV5)
+            MQTTV5SetMessageHandler(c, topicFilter, NULL);
+#else
             MQTTSetMessageHandler(c, topicFilter, NULL);
+#endif
+            /* remove the subscription message handler associated with this topic, if there is one */
         }
     }
     else
@@ -768,7 +830,7 @@ exit:
 }
 
 #if defined(MQTTV5)
-int MQTTV5Publish(MQTTClient *client, const char *topicName, MQTTMessage *message,
+int MQTTV5Publish(MQTTClient *c, const char *topicName, MQTTMessage *message,
                   MQTTProperties *properties)
 #else
 int MQTTPublish(MQTTClient *c, const char *topicName, MQTTMessage *message)
@@ -886,6 +948,41 @@ exit:
     return rc;
 }
 
+/**
+ * @brief MQTT Disconnect - send an MQTTv5 disconnect packet and close the connection.
+ *
+ * @param client The `MQTTClient` object to use.
+ * @param reasonCode The MQTTv5 reason code.
+ * @param properties The MQTTv5 disconnect properties.
+ * @return An #MQTTClientReturnCode indicating success or failure.
+ */
+#if defined(MQTTV5)
+int MQTTV5Disconnect(MQTTClient *c, unsigned char reasonCode, const MQTTProperties *properties)
+{
+    // TODO: implement MQTTv5 disconnect and callback to expose reason code and properties.
+    int rc = MQTTCLIENT_FAILURE;
+    Timer timer; // we might wait for incomplete incoming publishes to complete
+    int32_t len = 0;
+
+#if defined(MQTT_TASK)
+    MutexLock(&c->mutex);
+#endif
+    TimerInit(&timer);
+    TimerCountdownMS(&timer, c->command_timeout_ms);
+
+    len = MQTTV5Serialize_disconnect(c->buf, c->buf_size, reasonCode, properties);
+    if (len > 0)
+    {
+        rc = sendPacket(c, len, &timer); // send the disconnect packet
+    }
+    MQTTCloseSession(c);
+
+#if defined(MQTT_TASK)
+    MutexUnlock(&c->mutex);
+#endif
+    return rc;
+}
+#else
 int MQTTDisconnect(MQTTClient *c)
 {
     int rc = MQTTCLIENT_FAILURE;
@@ -908,9 +1005,10 @@ int MQTTDisconnect(MQTTClient *c)
 #endif
     return rc;
 }
+#endif
 
 #if defined(MQTTV5)
-int MQTTV5PublishWithResults(MQTTClient *client, const char *topicName, MQTTMessage *message,
+int MQTTV5PublishWithResults(MQTTClient *c, const char *topicName, MQTTMessage *message,
                              MQTTProperties *properties, MQTTPubDoneData *ack)
 {
     int rc = MQTTCLIENT_FAILURE;
@@ -1004,6 +1102,77 @@ exit:
 #if defined(MQTT_TASK)
     MutexUnlock(&c->mutex);
 #endif
+    return rc;
+}
+
+int MQTTV5Auth(MQTTClient *client, unsigned char reasonCode, MQTTProperties *properties)
+{
+    // TODO: implement MQTTv5 Auth and callback to expose reason code and properties.
+    /*
+        Header header;
+        int rc = MQTTCLIENT_FAILURE;
+        char *buf = NULL;
+        char *ptr = NULL;
+        size_t props_len = 0;
+        size_t buflen = 0;
+
+        // 1. On prépare le header (Type 15 = AUTH)
+        header.byte = 0;
+        header.bits.type = AUTH;
+
+        // 2. Calcul de la taille nécessaire
+        // Taille = Reason Code (1 octet) + Longueur des propriétés (VBI) + Données des propriétés
+        if (properties) {
+            props_len = MQTTProperties_len(properties);
+        }
+
+        buflen = 1 + props_len; // 1 octet pour le reasonCode + le bloc propriétés
+
+        // 3. Allocation (ou buffer statique si tu as viré malloc)
+        if ((buf = malloc(buflen)) == NULL)
+            return MQTTCLIENT_FAILURE;
+
+        ptr = buf;
+
+        // 4. Sérialisation
+        writeChar(&ptr, reasonCode);
+        if (properties) {
+            MQTTProperties_write(&ptr, properties);
+        }
+
+        // 5. Envoi via la fonction de base de la lib
+        // MQTTPacket_send va ajouter le Fixed Header et le Remaining Length automatiquement
+        rc = MQTTPacket_send(&client->net, header, buf, buflen, 1, client->MQTTVersion);
+
+        if (rc != TCPSOCKET_INTERRUPTED)
+            free(buf); // On libère si l'envoi est terminé
+
+        return (rc == TCPSOCKET_COMPLETE) ? MQTTCLIENT_SUCCESS : rc;
+        */
+}
+int MQTTV5SetAuthHandler(MQTTClient *client, controlHandler authHandler)
+{
+    int rc = MQTTCLIENT_FAILURE;
+
+    if (client != NULL)
+    {
+        client->authHandler = authHandler;
+        rc = MQTTCLIENT_SUCCESS;
+    }
+
+    return rc;
+}
+
+int MQTTV5SetDisconnectHandler(MQTTClient *client, controlHandler disconnectHandler)
+{
+    int rc = MQTTCLIENT_FAILURE;
+
+    if (client != NULL)
+    {
+        client->disconnectHandler = disconnectHandler;
+        rc = MQTTCLIENT_SUCCESS;
+    }
+
     return rc;
 }
 #endif

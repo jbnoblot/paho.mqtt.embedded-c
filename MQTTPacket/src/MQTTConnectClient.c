@@ -277,16 +277,25 @@ exit:
 }
 
 
+
+#if defined(MQTTV5)
+/**
+  * Serializes a disconnect packet into the supplied buffer, ready for writing to a socket
+  * @param buf the buffer into which the packet will be serialized
+  * @param buflen the length in bytes of the supplied buffer, to avoid overruns
+  * @param reasonCode the reason code for the disconnect packet
+  * @param properties the V5 properties for the disconnect packet
+  * @return serialized length, or error if 0
+  */
+int MQTTV5Serialize_disconnect(unsigned char* buf, size_t buflen,
+	            unsigned char reasonCode, const MQTTProperties* properties)
+#else
 /**
   * Serializes a disconnect packet into the supplied buffer, ready for writing to a socket
   * @param buf the buffer into which the packet will be serialized
   * @param buflen the length in bytes of the supplied buffer, to avoid overruns
   * @return serialized length, or error if 0
   */
-#if defined(MQTTV5)
-int MQTTV5Serialize_disconnect(unsigned char* buf, size_t buflen,
-	            unsigned char reasonCode, const MQTTProperties* properties)
-#else
 int MQTTSerialize_disconnect(unsigned char* buf, size_t buflen)
 #endif
 {

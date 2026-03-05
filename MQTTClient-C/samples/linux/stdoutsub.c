@@ -191,7 +191,67 @@ void messageArrived(MessageData* md)
 	//fflush(stdout);
 }
 
+#if defined(MQTTV5)
+int main(int argc, char** argv)
+{
+	int rc = 0;
+	unsigned char buf[100];
+	unsigned char readbuf[100];
+	
+	if (argc < 2)
+		usage();
+	
+	char* topic = argv[1];
 
+	if (strchr(topic, '#') || strchr(topic, '+'))
+		opts.showtopics = 1;
+	if (opts.showtopics)
+		printf("topic is %s\n", topic);
+
+	getopts(argc, argv);	
+
+	Network n;
+	MQTTClient c;
+
+	signal(SIGINT, cfinish);
+	signal(SIGTERM, cfinish);
+
+	NetworkInit(&n);
+	NetworkConnect(&n, opts.host, opts.port);
+	MQTTV5ClientInit(&c, &n, 1000, buf, 100, readbuf, 100);
+ 
+	MQTTPacket_connectData data = MQTTPacket_connectData_initializer;       
+	data.willFlag = 0;
+	data.MQTTVersion = 3;
+	data.clientID.cstring = opts.clientid;
+	data.username.cstring = opts.username;
+	data.password.cstring = opts.password;
+
+	data.keepAliveInterval = 10;
+	data.cleansession = 1;
+	printf("Connecting to %s %d\n", opts.host, opts.port);
+	
+	rc = MQTTV5Connect(&c, &data);
+	printf("Connected %d\n", rc);
+    
+    printf("Subscribing to %s\n", topic);
+	rc = MQTTV5Subscribe(&c, topic, opts.qos, messageArrived);
+	printf("Subscribed %d\n", rc);
+
+	while (!toStop)
+	{
+		MQTTYield(&c, 1000);	
+	}
+	
+	printf("Stopping\n");
+
+	MQTTV5Disconnect(&c);
+	NetworkDisconnect(&n);
+
+	return 0;
+}
+
+#else
 int main(int argc, char** argv)
 {
 	int rc = 0;
@@ -251,4 +311,5 @@ int main(int argc, char** argv)
 	return 0;
 }
 
+#endif
 

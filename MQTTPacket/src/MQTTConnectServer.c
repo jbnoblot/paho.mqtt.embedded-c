@@ -233,7 +233,8 @@ int MQTTV5Deserialize_zero(unsigned char packettype, MQTTProperties *properties,
 	{
 		goto exit;
 	}
-	curdata += (rc = MQTTPacket_decodeBuf(curdata, &mylen)); /* read remaining length */
+	rc = MQTTPacket_decodeBuf(curdata, &mylen);
+	curdata += rc; /* read remaining length */
 	enddata = curdata + mylen;
 
 	if (mylen > 0)
@@ -256,27 +257,43 @@ exit:
 }
 #endif
 
+
+#if defined(MQTTV5)
 /**
- * Deserializes the supplied (wire) buffer into connack data - return code
- * @param sessionPresent the session present flag returned (only for MQTT 3.1.1)
- * @param connack_rc returned integer value of the connack return code
+ * Deserializes the supplied (wire) buffer into disconnect data - return code
+ * @param properties the V5 properties for the disconnect packet
+ * @param reasonCode the reason code for the disconnect packet
  * @param buf the raw buffer data, of the correct length determined by the remaining length field
- * @param len the length in bytes of the data in the supplied buffer
+ * @param buflen the length in bytes of the data in the supplied buffer
  * @return error code.  1 is success, 0 is failure
  */
-#if defined(MQTTV5)
 int MQTTV5Deserialize_disconnect(MQTTProperties *properties, unsigned char *reasonCode,
 								 unsigned char *buf, size_t buflen)
 {
+
 	return MQTTV5Deserialize_zero(DISCONNECT, properties, reasonCode, buf, buflen);
 }
 
+/**
+ * Deserializes the supplied (wire) buffer into auth data - return code
+ * @param properties the V5 properties for the auth packet
+ * @param reasonCode the reason code for the auth packet
+ * @param buf the raw buffer data, of the correct length determined by the remaining length field
+ * @param buflen the length in bytes of the data in the supplied buffer
+ * @return error code.  1 is success, 0 is failure
+ */
 int MQTTV5Deserialize_auth(MQTTProperties *properties, unsigned char *reasonCode,
 						   unsigned char *buf, size_t buflen)
 {
 	return MQTTV5Deserialize_zero(AUTH, properties, reasonCode, buf, buflen);
 }
 #else
+/**
+ * Deserializes the supplied (wire) buffer into connack data - return code
+ * @param buf the raw buffer data, of the correct length determined by the remaining length field
+ * @param buflen the length in bytes of the data in the supplied buffer
+ * @return error code.  1 is success, 0 is failure
+ */
 int MQTTDeserialize_disconnect(unsigned char *buf, size_t buflen)
 {
 	unsigned char type = 0;
