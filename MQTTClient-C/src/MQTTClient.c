@@ -411,21 +411,20 @@ int cycle(MQTTClient *c, const Timer *timer)
         break;
 #if defined(MQTTV5)
     case AUTH:
-        unsigned short mypacketid;
-        unsigned char dup;
-        unsigned char type;
         unsigned char reasonCode;
-        rc = MQTTV5Deserialize_ack(&type, &dup, &mypacketid, &reasonCode, c->recvProperties, c->readbuf, c->readbuf_size);
-        c->authHandler(c->recvProperties, reasonCode, mypacketid);
+        rc = MQTTV5Deserialize_auth(c->recvProperties, &reasonCode, c->readbuf, c->readbuf_size);
+        if (rc == 1 && c->authHandler != NULL)
+        {
+            c->authHandler(c->recvProperties, reasonCode, 0);
+        }
         break;
     case DISCONNECT:
-        unsigned short mypacketid;
-        unsigned char dup;
-        unsigned char type;
         unsigned char reasonCode;
-        rc = MQTTV5Deserialize_ack(&type, &dup, &mypacketid, &reasonCode, c->recvProperties, c->readbuf, c->readbuf_size);
-        // TODO: implement DISCONNECTv5 and callback to expose reason code and properties.
-        c->disconnectHandler(c->recvProperties, reasonCode, mypacketid);
+        rc = MQTTV5Deserialize_disconnect(c->recvProperties, &reasonCode, c->readbuf, c->readbuf_size);
+        if (rc == 1 && c->disconnectHandler != NULL)
+        {
+            c->disconnectHandler(c->recvProperties, reasonCode, 0);
+        }
         break;
 #endif
     }
@@ -1105,50 +1104,39 @@ exit:
     return rc;
 }
 
-int MQTTV5Auth(MQTTClient *client, unsigned char reasonCode, MQTTProperties *properties)
+int MQTTV5Auth(MQTTClient *c, unsigned char reasonCode, MQTTProperties *properties)
 {
-    // TODO: implement MQTTv5 Auth and callback to expose reason code and properties.
-    /*
-        Header header;
-        int rc = MQTTCLIENT_FAILURE;
-        char *buf = NULL;
-        char *ptr = NULL;
-        size_t props_len = 0;
-        size_t buflen = 0;
+    int rc = MQTTCLIENT_FAILURE;
+    Timer timer;
+    int32_t len = 0;
 
-        // 1. On prépare le header (Type 15 = AUTH)
-        header.byte = 0;
-        header.bits.type = AUTH;
+    // 1. Sécurité : vérifier la connexion et la version
+    if (!c->isconnected)
+        goto exit;
 
-        // 2. Calcul de la taille nécessaire
-        // Taille = Reason Code (1 octet) + Longueur des propriétés (VBI) + Données des propriétés
-        if (properties) {
-            props_len = MQTTProperties_len(properties);
-        }
+    // 2. Initialiser le timer pour le timeout d'envoi
+    TimerInit(&timer);
+    TimerCountdownMS(&timer, c->command_timeout_ms);
 
-        buflen = 1 + props_len; // 1 octet pour le reasonCode + le bloc propriétés
+    // 3. Sérialiser le paquet AUTH
+    // On utilise c->buf (le buffer d'écriture du client)
+    len = MQTTV5Serialize_auth(c->buf, c->buf_size, reasonCode, properties);
 
-        // 3. Allocation (ou buffer statique si tu as viré malloc)
-        if ((buf = malloc(buflen)) == NULL)
-            return MQTTCLIENT_FAILURE;
+    if (len <= 0)
+    {
+        goto exit;
+    }
 
-        ptr = buf;
+    // 4. Envoyer le paquet sur le réseau
+    rc = sendPacket(c, len, &timer);
 
-        // 4. Sérialisation
-        writeChar(&ptr, reasonCode);
-        if (properties) {
-            MQTTProperties_write(&ptr, properties);
-        }
-
-        // 5. Envoi via la fonction de base de la lib
-        // MQTTPacket_send va ajouter le Fixed Header et le Remaining Length automatiquement
-        rc = MQTTPacket_send(&client->net, header, buf, buflen, 1, client->MQTTVersion);
-
-        if (rc != TCPSOCKET_INTERRUPTED)
-            free(buf); // On libère si l'envoi est terminé
-
-        return (rc == TCPSOCKET_COMPLETE) ? MQTTCLIENT_SUCCESS : rc;
-        */
+exit:
+    // En cas d'échec critique sur l'envoi, on ferme la session
+    if (rc != MQTTCLIENT_SUCCESS)
+    {
+        MQTTCloseSession(c);
+    }
+    return rc;
 }
 int MQTTV5SetAuthHandler(MQTTClient *client, controlHandler authHandler)
 {
