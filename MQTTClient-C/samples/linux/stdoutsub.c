@@ -40,7 +40,7 @@
 
 	stdoutsub topic/of/interest --host iot.eclipse.org
 
-*//
+*/
 #include <stdio.h>
 #include <memory.h>
 #include "../../src/MQTTClient.h"

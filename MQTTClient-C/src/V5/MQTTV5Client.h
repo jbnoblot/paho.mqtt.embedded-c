@@ -71,7 +71,7 @@ DLLExport void MQTTV5ClientInit(MQTTClient* client, Network* network, unsigned i
  * @return 0 on success. If negative, an #MQTTClientReturnCode indicating success or failure. 
  *         If positive, the `MQTTReasonCodes` returned by the server.
  */
-DLLExport int MQTTV5ConnectWithResults(MQTTClient* client, MQTTPacket_connectData* options,
+DLLExport int MQTTV5ConnectWithResults(MQTTClient* client, MQTTV5Packet_connectData* options,
     MQTTProperties* connectProperties, MQTTProperties* willProperties, MQTTConnackData* connack);
 
 /**
@@ -85,7 +85,7 @@ DLLExport int MQTTV5ConnectWithResults(MQTTClient* client, MQTTPacket_connectDat
  * @return 0 on success. If negative, an #MQTTClientReturnCode indicating success or failure. 
  *         If positive, the `MQTTReasonCodes` returned by the server.
  */
-DLLExport int MQTTV5Connect(MQTTClient* client, MQTTPacket_connectData* options, 
+DLLExport int MQTTV5Connect(MQTTClient* client, MQTTV5Packet_connectData* options, 
   MQTTProperties* connectProperties, MQTTProperties* willProperties);
 
 /**

@@ -523,7 +523,7 @@ int waitfor(MQTTClient *c, int packet_type, const Timer *timer)
     return rc;
 }
 #if defined(MQTTV5)
-int MQTTV5ConnectWithResults(MQTTClient *c, MQTTPacket_connectData *options,
+int MQTTV5ConnectWithResults(MQTTClient *c, MQTTV5Packet_connectData *options,
                              MQTTProperties *connectProperties, MQTTProperties *willProperties, MQTTConnackData *data)
 #else
 int MQTTConnectWithResults(MQTTClient *c, MQTTPacket_connectData *options, MQTTConnackData *data)
@@ -531,7 +531,11 @@ int MQTTConnectWithResults(MQTTClient *c, MQTTPacket_connectData *options, MQTTC
 {
     Timer connect_timer;
     int rc = MQTTCLIENT_FAILURE;
+#if defined(MQTTV5)
+    MQTTV5Packet_connectData default_options = MQTTV5Packet_connectData_initializer;
+#else
     MQTTPacket_connectData default_options = MQTTPacket_connectData_initializer;
+#endif
     int32_t len = 0;
 
 #if defined(MQTT_TASK)
@@ -614,7 +618,7 @@ exit:
 }
 
 #if defined(MQTTV5)
-int MQTTV5Connect(MQTTClient *client, MQTTPacket_connectData *options,
+int MQTTV5Connect(MQTTClient *client, MQTTV5Packet_connectData *options,
                   MQTTProperties *connectProperties, MQTTProperties *willProperties)
 {
     MQTTConnackData data;
