@@ -27,7 +27,7 @@ extern "C"
 #if defined(_WIN32) && defined(BUILDING_LIB)
 #define DLLImport __declspec(dllimport)
 #define DLLExport __declspec(dllexport)
-#elif defined(__linux__) || defined(__APPLE__) && defined(BUILDING_LIB)
+#elif (defined(__linux__) || defined(__APPLE__)) && defined(BUILDING_LIB)
 #define DLLImport extern
 #define DLLExport __attribute__((visibility("default")))
 #else
@@ -36,7 +36,7 @@ extern "C"
 #endif
 
 #if defined(MQTTV5)
-#include "../../MQTTPacket/src/MQTTV5Packet.h"
+#include "MQTTV5Packet.h"
 #else
 #include "MQTTPacket.h"
 #endif /* MQTTV5 */
@@ -295,7 +295,7 @@ extern "C"
         .messageHandlers = {{NULL, NULL}}, \
     .defaultMessageHandler = NULL,         \
     .ipstack = NULL}
-#else
+
 /**
  * @brief Create an `MQTTClient` object.
  *

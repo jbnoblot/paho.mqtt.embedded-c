@@ -70,9 +70,9 @@ typedef struct
   MQTTPropertyCodes identifier; /* mbi */
   union
   {
-    char byte;
-    short integer2;
-    int integer4;
+    int8_t byte;
+    int16_t integer2;
+    int32_t integer4;
     MQTTLenString data;
     MQTTStringPair string_pair; /* for user properties */
   } value;

@@ -26,7 +26,7 @@ extern "C"
 #if defined(_WIN32) && defined(BUILDING_LIB)
 #define DLLImport __declspec(dllimport)
 #define DLLExport __declspec(dllexport)
-#elif defined(__linux__) || defined(__APPLE__) && defined(BUILDING_LIB)
+#elif (defined(__linux__) || defined(__APPLE__)) && defined(BUILDING_LIB)
 #define DLLImport extern
 #define DLLExport __attribute__((visibility("default")))
 #else

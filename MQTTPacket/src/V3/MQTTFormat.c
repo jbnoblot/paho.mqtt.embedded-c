@@ -118,7 +118,7 @@ int MQTTStringFormat_unsubscribe(char* strbuf, int strbuflen, unsigned char dup,
 char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf, size_t buflen)
 {
 	int index = 0;
-	int rem_length = 0;
+	uint32_t rem_length = 0;
 	unsigned char header;
 	int strindex = 0;
 
@@ -188,7 +188,7 @@ char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf,
 char* MQTTFormat_toServerString(char* strbuf, int strbuflen, unsigned char* buf, size_t buflen)
 {
 	int index = 0;
-	int rem_length = 0;
+	uint32_t rem_length = 0;
 	unsigned char header;
 	int strindex = 0;
 

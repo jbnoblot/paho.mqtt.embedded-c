@@ -21,7 +21,7 @@
 
 #include <stdbool.h>
 #include "../MQTTClient.h"
-#include "../../../MQTTPacket/src/MQTTV5Packet.h"
+#include "MQTTV5Packet.h"
 
 
 /**

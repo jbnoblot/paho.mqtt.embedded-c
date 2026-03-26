@@ -43,7 +43,7 @@
 */
 #include <stdio.h>
 #include <memory.h>
-#include "../../src/MQTTClient.h"
+#include "MQTTClient.h"
 
 #include <stdio.h>
 #include <signal.h>
