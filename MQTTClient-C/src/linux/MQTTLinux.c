@@ -22,7 +22,7 @@ void TimerInit(Timer* timer)
 	timer->end_time = (struct timeval){0, 0};
 }
 
-char TimerIsExpired(Timer* timer)
+char TimerIsExpired(const Timer* timer)
 {
 	struct timeval now, res;
 	gettimeofday(&now, NULL);
@@ -49,7 +49,7 @@ void TimerCountdown(Timer* timer, unsigned int timeout)
 }
 
 
-int TimerLeftMS(Timer* timer)
+int TimerLeftMS(const Timer* timer)
 {
 	struct timeval now, res;
 	gettimeofday(&now, NULL);
@@ -68,7 +68,7 @@ int linux_read(Network* n, unsigned char* buffer, int len, int timeout_ms)
 		interval.tv_usec = 100;
 	}
 
-	setsockopt(n->my_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&interval, sizeof(struct timeval));
+	setsockopt(n->my_socket, SOL_SOCKET, SO_RCVTIMEO, &interval, sizeof(struct timeval));
 
 	int bytes = 0;
 	while (bytes < len)
@@ -99,7 +99,7 @@ int linux_write(Network* n, unsigned char* buffer, int len, int timeout_ms)
 	tv.tv_sec = 0;  /* 30 Secs Timeout */
 	tv.tv_usec = timeout_ms * 1000;  // Not init'ing this can cause strange errors
 
-	setsockopt(n->my_socket, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv,sizeof(struct timeval));
+	setsockopt(n->my_socket, SOL_SOCKET, SO_SNDTIMEO, &tv,sizeof(struct timeval));
 	int	rc = write(n->my_socket, buffer, len);
 	return rc;
 }
@@ -122,8 +122,8 @@ int NetworkConnect(Network* n, char* addr, int port)
 	sa_family_t family = AF_INET;
 	struct addrinfo *result = NULL;
 	struct addrinfo hints = {0, AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP, 0, NULL, NULL, NULL};
-
-	if ((rc = getaddrinfo(addr, NULL, &hints, &result)) == 0)
+	rc = getaddrinfo(addr, NULL, &hints, &result);
+	if (rc == 0)
 	{
 		struct addrinfo* res = result;
 

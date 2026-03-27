@@ -95,9 +95,9 @@ int checkMQTTProperties(MQTTProperties* before, MQTTProperties* after)
 	int i = 0;
 
   assert("Counts should be the same", before->count == after->count,
-	       "Counts are different %d", after->count);
+	       "Counts are different %d\n", after->count);
 	assert("Lengths should be the same", before->length == after->length,
-		 		 "Lengths are different %d", after->length);
+		 		 "Lengths are different %d\n", after->length);
   for (i = 0; i < before->count; ++i)
 	{
 		int j = 0;
@@ -216,13 +216,10 @@ int test2(struct Options options)
 	MQTTProperties properties = MQTTProperties_initializer;
 	MQTTProperties outProperties = MQTTProperties_initializer;
 	MQTTProperty props[10], out_props[10];
-
 	properties.max_count = 10;
 	properties.array = props;
-
 	outProperties.max_count = 10;
 	outProperties.array = out_props;
-
 	MQTTProperty one;
 	one.identifier = MQTTPROPERTY_CODE_SESSION_EXPIRY_INTERVAL;
 	one.value.integer4 = 45;
@@ -234,7 +231,7 @@ int test2(struct Options options)
 	MyLog(LOGA_INFO, "Starting test 2 - serialization of publish and back");
 
 	topicString.cstring = "mytopic";
-	rc = MQTTV5Serialize_publish(buf, buflen, dup, qos, retained, msgid, topicString,
+	rc = MQTTV5Serialize_publish(buf, buflen, dup, qos, retained, msgid, &topicString,
 			&properties, payload, payloadlen);
 	assert("good rc from serialize publish", rc > 0, "rc was %d\n", rc);
 
@@ -293,13 +290,11 @@ int test3(struct Options options)
 	MQTTProperties properties = MQTTProperties_initializer;
 	MQTTProperties outProperties = MQTTProperties_initializer;
 	MQTTProperty props[10], out_props[10];
-
 	properties.max_count = 10;
 	properties.array = props;
 
 	outProperties.max_count = 10;
 	outProperties.array = out_props;
-
 	MQTTProperty one;
 	one.identifier = MQTTPROPERTY_CODE_USER_PROPERTY;
 	one.value.string_pair.key.data = "user property name";
@@ -377,13 +372,11 @@ int test4(struct Options options)
 	MQTTProperties properties = MQTTProperties_initializer;
 	MQTTProperties outProperties = MQTTProperties_initializer;
 	MQTTProperty props[10], out_props[10];
-
 	properties.max_count = 10;
 	properties.array = props;
 
 	outProperties.max_count = 10;
 	outProperties.array = out_props;
-
 	MQTTProperty one;
 	one.identifier = MQTTPROPERTY_CODE_USER_PROPERTY;
 	one.value.string_pair.key.data = "user property name";
@@ -525,6 +518,13 @@ int test6(struct Options options)
 
 	rc = MQTTV5Serialize_connack(buf, buflen, connack_rc, sessionPresent, &connackProperties);
 	assert("good rc from serialize connack", rc > 0, "rc was %d\n", rc);
+	printf("Serialized connack length was %d - buflen was %d\n", rc, buflen);
+	printf("Serialized (%d bytes):\n", rc);
+	for (int i = 0; i < rc; i++) {
+		printf("%02X ", buf[i]);
+		if ((i + 1) % 16 == 0) printf("\n");
+	}
+	printf("\n");
 
 	rc = MQTTV5Deserialize_connack(&outConnackProperties, &sessionPresent2, &connack_rc2, buf, buflen);
 	assert("good rc from deserialize connack", rc == 1, "rc was %d\n", rc);
@@ -668,13 +668,11 @@ int test9(struct Options options)
 	MQTTProperties properties = MQTTProperties_initializer;
 	MQTTProperties outProperties = MQTTProperties_initializer;
 	MQTTProperty props[10], out_props[10];
-
 	properties.max_count = 10;
 	properties.array = props;
 
 	outProperties.max_count = 10;
 	outProperties.array = out_props;
-
 	MQTTProperty one;
 	one.identifier = MQTTPROPERTY_CODE_USER_PROPERTY;
 	one.value.string_pair.key.data = "user property name";

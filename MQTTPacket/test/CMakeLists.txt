@@ -1,6 +1,6 @@
 PROJECT(mqttpacket-tests)
 
-IF (WIN32)
+IF (_WIN32)
   SET(MQTT_TEST_BROKER "tcp://mqtt.iotree.co.uk:1883" CACHE STRING "Hostname of a test MQTT broker to use")
   SET(MQTT_TEST_PROXY "tcp://localhost:1883" CACHE STRING "Hostname of the test proxy to use")
   SET(MQTT_SSL_HOSTNAME "mqtt.iotree.co.uk" CACHE STRING "Hostname of a test SSL MQTT broker to use")

@@ -17,15 +17,15 @@
 #if !defined(__MQTT_LINUX_)
 #define __MQTT_LINUX_
 
-#if defined(WIN32_DLL) || defined(WIN64_DLL)
-  #define DLLImport __declspec(dllimport)
-  #define DLLExport __declspec(dllexport)
-#elif defined(LINUX_SO)
-  #define DLLImport extern
-  #define DLLExport  __attribute__ ((visibility ("default")))
+#if defined(_WIN32) && defined(BUILDING_LIB)
+#define DLLImport __declspec(dllimport)
+#define DLLExport __declspec(dllexport)
+#elif (defined(__linux__) || defined(__APPLE__)) && defined(BUILDING_LIB)
+#define DLLImport extern
+#define DLLExport __attribute__((visibility("default")))
 #else
-  #define DLLImport
-  #define DLLExport
+#define DLLImport
+#define DLLExport
 #endif
 
 #include <sys/types.h>
@@ -52,10 +52,10 @@ typedef struct Timer
 } Timer;
 
 void TimerInit(Timer*);
-char TimerIsExpired(Timer*);
+char TimerIsExpired(const Timer*);
 void TimerCountdownMS(Timer*, unsigned int);
 void TimerCountdown(Timer*, unsigned int);
-int TimerLeftMS(Timer*);
+int TimerLeftMS(const Timer*);
 
 typedef struct Network
 {

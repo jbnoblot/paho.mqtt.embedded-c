@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 	}
 
 	topicString.cstring = "mytopicv5";
-	len += MQTTV5Serialize_publish((unsigned char *)(buf + len), buflen - len, 0, 1, 0, 123, topicString, &pub_properties, (unsigned char *)payload, payloadlen);
+	len += MQTTV5Serialize_publish((unsigned char *)(buf + len), buflen - len, 0, 1, 0, 123, &topicString, &pub_properties, (unsigned char *)payload, payloadlen);
 
 	MQTTProperties disconnect_properties = MQTTProperties_initializer;
 	len += MQTTV5Serialize_disconnect((unsigned char *)(buf + len), buflen - len, MQTTREASONCODE_NORMAL_DISCONNECTION, &disconnect_properties);

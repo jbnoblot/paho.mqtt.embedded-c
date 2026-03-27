@@ -50,10 +50,8 @@ int test_v5(struct Options options)
 	data.username.cstring = "testuser";
 	data.password.cstring = "testpassword";
 	data.MQTTVersion = 5;
-
 	properties.max_count = 10;
 	properties.array = props;
-
 	one.identifier = MQTTPROPERTY_CODE_SESSION_EXPIRY_INTERVAL;
 	one.value.integer4 = 45;
 	rc = MQTTProperties_add(&properties, &one);
@@ -117,11 +115,11 @@ int test_v5(struct Options options)
 
 	properties.length = properties.count = 0; /* remove existing properties */
 	one.identifier = MQTTPROPERTY_CODE_PAYLOAD_FORMAT_INDICATOR;
-	one.value.byte = 3;
+	one.value.byte = 1;
 	rc = MQTTProperties_add(&properties, &one);
 
 	topicString.cstring = test_topic;
-	len = MQTTV5Serialize_publish(buf, buflen, 0, 0, 0, 0, topicString, &properties, (unsigned char *)payload, payloadlen);
+	len = MQTTV5Serialize_publish(buf, buflen, 0, 0, 0, 0, &topicString, &properties, (unsigned char *)payload, payloadlen);
 	rc = transport_sendPacketBuffer(mysock, buf, len);
 	assert("rc and len should be the same",  rc == len, "rc was different %d\n", rc);
 
@@ -149,11 +147,11 @@ int test_v5(struct Options options)
 
 	/* Publish QoS 1 this time */
 	topicString.cstring = test_topic;
-	len = MQTTV5Serialize_publish(buf, buflen, 0, 1, 0, ++msgid, topicString, &properties, (unsigned char *)payload, payloadlen);
+	len = MQTTV5Serialize_publish(buf, buflen, 0, 1, 0, ++msgid, &topicString, &properties, (unsigned char *)payload, payloadlen);
 	rc = transport_sendPacketBuffer(mysock, buf, len);
 	assert("rc and len should be the same",  rc == len, "rc was different %d\n", rc);
 
-  i = 0;
+	i = 0;
 	while (i < 2)
 	{
 	  rc = MQTTV5Packet_read(buf, buflen, transport_getdata); /* wait for publish and puback */
@@ -201,7 +199,7 @@ int test_v5(struct Options options)
 
 	/* Publish QoS 2 this time */
 	topicString.cstring = test_topic;
-	len = MQTTV5Serialize_publish(buf, buflen, 0, 2, 0, ++msgid, topicString, &properties, (unsigned char *)payload, payloadlen);
+	len = MQTTV5Serialize_publish(buf, buflen, 0, 2, 0, ++msgid, &topicString, &properties, (unsigned char *)payload, payloadlen);
 	rc = transport_sendPacketBuffer(mysock, buf, len);
 	assert("rc and len should be the same",  rc == len, "rc was different %d\n", rc);
 

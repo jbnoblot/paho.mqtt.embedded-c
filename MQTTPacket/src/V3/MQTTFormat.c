@@ -14,8 +14,8 @@
  *    Ian Craggs - initial API and implementation and/or initial documentation
  *******************************************************************************/
 
-#include "StackTrace.h"
-#include "MQTTPacket.h"
+#include "../StackTrace.h"
+#include "../MQTTPacket.h"
 
 #include <string.h>
 
@@ -115,17 +115,17 @@ int MQTTStringFormat_unsubscribe(char* strbuf, int strbuflen, unsigned char dup,
 
 
 #if defined(MQTT_CLIENT)
-char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf, int32_t buflen)
+char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf, size_t buflen)
 {
 	int index = 0;
-	int rem_length = 0;
-	MQTTHeader header = {0};
+	uint32_t rem_length = 0;
+	unsigned char header;
 	int strindex = 0;
 
-	header.byte = buf[index++];
+	header = buf[index++];
 	index += MQTTPacket_decodeBuf(&buf[index], &rem_length);
 
-	switch (header.bits.type)
+	switch ((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT)
 	{
 
 	case CONNACK:
@@ -177,7 +177,7 @@ char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf,
 	case PINGREQ:
 	case PINGRESP:
 	case DISCONNECT:
-		strindex = snprintf(strbuf, strbuflen, "%s", MQTTPacket_names[header.bits.type]);
+		strindex = snprintf(strbuf, strbuflen, "%s", MQTTPacket_names[(header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT]);
 		break;
 	}
 	return strbuf;
@@ -185,23 +185,22 @@ char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf,
 #endif
 
 #if defined(MQTT_SERVER)
-char* MQTTFormat_toServerString(char* strbuf, int strbuflen, unsigned char* buf, int32_t buflen)
+char* MQTTFormat_toServerString(char* strbuf, int strbuflen, unsigned char* buf, size_t buflen)
 {
 	int index = 0;
-	int rem_length = 0;
-	MQTTHeader header = {0};
+	uint32_t rem_length = 0;
+	unsigned char header;
 	int strindex = 0;
 
-	header.byte = buf[index++];
+	header = buf[index++];
 	index += MQTTPacket_decodeBuf(&buf[index], &rem_length);
 
-	switch (header.bits.type)
+	switch ((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT)
 	{
 	case CONNECT:
 	{
 		MQTTPacket_connectData data;
-		int rc;
-		if ((rc = MQTTDeserialize_connect(&data, buf, buflen)) == 1)
+		if (MQTTDeserialize_connect(&data, buf, buflen) == 1)
 			strindex = MQTTStringFormat_connect(strbuf, strbuflen, &data);
 	}
 	break;
@@ -253,7 +252,7 @@ char* MQTTFormat_toServerString(char* strbuf, int strbuflen, unsigned char* buf,
 	case PINGREQ:
 	case PINGRESP:
 	case DISCONNECT:
-		strindex = snprintf(strbuf, strbuflen, "%s", MQTTPacket_names[header.bits.type]);
+		strindex = snprintf(strbuf, strbuflen, "%s", MQTTPacket_names[(header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT]);
 		break;
 	}
 	strbuf[strbuflen] = '\0';

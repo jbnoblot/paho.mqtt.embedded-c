@@ -17,56 +17,46 @@
 
 #include <stdint.h>
 #if !defined(DLLImport)
-  #define DLLImport
+#define DLLImport
 #endif
 #if !defined(DLLExport)
-  #define DLLExport
+#define DLLExport
 #endif
+
+#define MQTT_CONNECT_CLEAN_START_MASK  0x02 // Bit 1
+#define MQTT_CONNECT_WILL_FLAG_MASK    0x04 // Bit 2
+#define MQTT_CONNECT_WILL_QOS_MASK     0x18 // Bits 3 et 4 (00011000 en binaire)
+#define MQTT_CONNECT_WILL_RETAIN_MASK  0x20 // Bit 5
+#define MQTT_CONNECT_PASSWORD_MASK     0x40 // Bit 6
+#define MQTT_CONNECT_USERNAME_MASK     0x80 // Bit 7
+
+#define MQTT_CONNECT_CLEAN_START_SHIFT   1
+#define MQTT_CONNECT_WILL_FLAG_SHIFT     2
+#define MQTT_CONNECT_WILL_QOS_SHIFT      3
+#define MQTT_CONNECT_WILL_RETAIN_SHIFT   5
+#define MQTT_CONNECT_PASSWORD_SHIFT      6
+#define MQTT_CONNECT_USERNAME_SHIFT      7
+
+#define MQTT_CONNACK_SESSION_PRESENT_MASK 0x01
+#define MQTT_CONNACK_SESSION_PRESENT_SHIFT 0
 
 typedef union
 {
-	unsigned char all;	/**< all connect flags */
+	unsigned char all; /**< all connack flags */
 #if defined(REVERSED)
 	struct
 	{
-		unsigned int username : 1;			/**< 3.1 user name */
-		unsigned int password : 1; 			/**< 3.1 password */
-		unsigned int willRetain : 1;		/**< will retain setting */
-		unsigned int willQoS : 2;				/**< will QoS value */
-		unsigned int will : 1;			    /**< will flag */
-		unsigned int cleansession : 1;	  /**< V3 clean session or V5 clean start flag */
-		unsigned int : 1;	  	          /**< unused */
+		unsigned int reserved : 7;		 /**< unused */
+		unsigned int sessionpresent : 1; /**< session present flag */
 	} bits;
 #else
 	struct
 	{
-		unsigned int : 1;	     					/**< unused */
-		unsigned int cleansession : 1;	  /**< V3 clean session or V5 cleanstart flag */
-		unsigned int will : 1;			    /**< will flag */
-		unsigned int willQoS : 2;				/**< will QoS value */
-		unsigned int willRetain : 1;		/**< will retain setting */
-		unsigned int password : 1; 			/**< 3.1 password */
-		unsigned int username : 1;			/**< 3.1 user name */
+		unsigned int sessionpresent : 1; /**< session present flag */
+		unsigned int reserved : 7;		 /**< unused */
 	} bits;
 #endif
-} MQTTConnectFlags;	/**< connect flags byte */
+} MQTTConnackFlags; /**< connack flags byte */
 
-typedef union
-{
-	unsigned char all;	/**< all connack flags */
-#if defined(REVERSED)
-	struct
-	{
-    unsigned int reserved : 7;	  	    /**< unused */
-		unsigned int sessionpresent : 1;    /**< session present flag */
-	} bits;
-#else
-	struct
-	{
-		unsigned int sessionpresent : 1;    /**< session present flag */
-    unsigned int reserved: 7;	     			/**< unused */
-	} bits;
-#endif
-} MQTTConnackFlags;	/**< connack flags byte */
 
 #endif /* MQTTCONNECTINTERNAL_H_ */

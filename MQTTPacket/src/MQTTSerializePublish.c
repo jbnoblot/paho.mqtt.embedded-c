@@ -26,86 +26,88 @@
 
 #include <string.h>
 
-
 /**
-  * Determines the length of the MQTT publish packet that would be produced using the supplied parameters
-  * @param qos the MQTT QoS of the publish (packetid is omitted for QoS 0)
-  * @param topicName the topic name to be used in the publish
-  * @param payloadlen the length of the payload to be sent
-  * @return the length of buffer needed to contain the serialized version of the packet
-  */
+ * Determines the length of the MQTT publish packet that would be produced using the supplied parameters
+ * @param qos the MQTT QoS of the publish (packetid is omitted for QoS 0)
+ * @param topicName the topic name to be used in the publish
+ * @param payloadlen the length of the payload to be sent
+ * @return the length of buffer needed to contain the serialized version of the packet
+ */
 #if defined(MQTTV5)
-int32_t MQTTV5Serialize_publishLength(int qos, MQTTString topicName, int payloadlen, MQTTProperties* properties)
+int32_t MQTTV5Serialize_publishLength(int qos, const MQTTString *topicName, int payloadlen, MQTTProperties *properties)
 #else
-int32_t MQTTSerialize_publishLength(int qos, MQTTString topicName, int payloadlen)
+int32_t MQTTSerialize_publishLength(int qos, const MQTTString *topicName, int payloadlen)
 #endif
 {
 	int32_t len = 0;
 
 	len += 2 + MQTTstrlen(topicName) + payloadlen;
-	if (qos > 0)
+	if (qos > 0) {
 		len += 2; /* packetid */
+	}
 #if defined(MQTTV5)
-	if (properties)
-		len += MQTTProperties_len(properties);
+	len += MQTTProperties_len(properties);
 #endif
 	return len;
 }
 
-
 /**
-  * Serializes the supplied publish data into the supplied buffer, ready for sending
-  * @param buf the buffer into which the packet will be serialized
-  * @param buflen the length in bytes of the supplied buffer
-  * @param dup integer - the MQTT dup flag
-  * @param qos integer - the MQTT QoS value
-  * @param retained integer - the MQTT retained flag
-  * @param packetid integer - the MQTT packet identifier
-  * @param topicName MQTTString - the MQTT topic in the publish
-  * @param payload byte buffer - the MQTT publish payload
-  * @param payloadlen integer - the length of the MQTT payload
-  * @return the length of the serialized data.  <= 0 indicates error
-  */
+ * Serializes the supplied publish data into the supplied buffer, ready for sending
+ * @param buf the buffer into which the packet will be serialized
+ * @param buflen the length in bytes of the supplied buffer
+ * @param dup integer - the MQTT dup flag
+ * @param qos integer - the MQTT QoS value
+ * @param retained integer - the MQTT retained flag
+ * @param packetid integer - the MQTT packet identifier
+ * @param topicName MQTTString - the MQTT topic in the publish
+ * @param payload byte buffer - the MQTT publish payload
+ * @param payloadlen integer - the length of the MQTT payload
+ * @return the length of the serialized data.  <= 0 indicates error
+ */
 #if defined(MQTTV5)
-int32_t MQTTV5Serialize_publish(unsigned char* buf, int32_t buflen, unsigned char dup, unsigned char qos, unsigned char retained, unsigned short packetid,
-		MQTTString topicName, MQTTProperties* properties, unsigned char* payload, int payloadlen)
+int32_t MQTTV5Serialize_publish(unsigned char *buf, size_t buflen, unsigned char dup, unsigned char qos, unsigned char retained, unsigned short packetid,
+								const MQTTString *topicName, MQTTProperties *properties, unsigned char *payload, int payloadlen)
 #else
-int32_t MQTTSerialize_publish(unsigned char* buf, int32_t buflen, unsigned char dup, unsigned char qos, unsigned char retained, unsigned short packetid,
-		MQTTString topicName, unsigned char* payload, int32_t payloadlen)
+int32_t MQTTSerialize_publish(unsigned char *buf, size_t buflen, unsigned char dup, unsigned char qos, unsigned char retained, unsigned short packetid,
+							  const MQTTString *topicName, const unsigned char *payload, int32_t payloadlen)
 #endif
 {
 	unsigned char *ptr = buf;
-	MQTTHeader header = {0};
+	unsigned char header;
 	int32_t rem_len = 0;
 	int32_t rc = 0;
 
 	FUNC_ENTRY;
 #if defined(MQTTV5)
-	if (MQTTPacket_len(rem_len = MQTTV5Serialize_publishLength(qos, topicName, payloadlen, properties)) > buflen)
+	rem_len = MQTTV5Serialize_publishLength(qos, topicName, payloadlen, properties);
 #else
-	if (MQTTPacket_len(rem_len = MQTTSerialize_publishLength(qos, topicName, payloadlen)) > buflen)
+	rem_len = MQTTSerialize_publishLength(qos, topicName, payloadlen);
 #endif
+	if (MQTTPacket_len(rem_len) > buflen)
 	{
 		rc = MQTTPACKET_BUFFER_TOO_SHORT;
 		goto exit;
 	}
 
-	header.bits.type = PUBLISH;
-	header.bits.dup = dup;
-	header.bits.qos = qos;
-	header.bits.retain = retained;
-	writeChar(&ptr, header.byte); /* write header */
+	header = 0;
+	header |= (PUBLISH << MQTT_HEADER_TYPE_SHIFT);
+	header |= (dup << MQTT_HEADER_DUP_SHIFT);
+	header |= (qos << MQTT_HEADER_QOS_SHIFT);
+	header |= (retained << MQTT_HEADER_RETAIN_SHIFT);
+	writeChar(&ptr, header); /* write header */
 
-	ptr += MQTTPacket_encode_internal(ptr, rem_len); /* write remaining length */;
+	ptr += MQTTPacket_encode_internal(ptr, rem_len); /* write remaining length */
 
 	writeMQTTString(&ptr, topicName);
 
 	if (qos > 0)
+	{
 		writeInt(&ptr, packetid);
-
+	}
 #if defined(MQTTV5)
-  if (properties && MQTTProperties_write(&ptr, properties) < 0)
+	if (MQTTProperties_write(&ptr, properties) < 0) {
 		goto exit;
+	}
 #endif
 
 	memcpy(ptr, payload, payloadlen);
@@ -118,57 +120,63 @@ exit:
 	return rc;
 }
 
-
-
 /**
-  * Serializes the ack packet into the supplied buffer.
-  * @param buf the buffer into which the packet will be serialized
-  * @param buflen the length in bytes of the supplied buffer
-  * @param type the MQTT packet type
-  * @param dup the MQTT dup flag
-  * @param packetid the MQTT packet identifier
-  * @return serialized length, or error if 0
-  */
+ * Serializes the ack packet into the supplied buffer.
+ * @param buf the buffer into which the packet will be serialized
+ * @param buflen the length in bytes of the supplied buffer
+ * @param type the MQTT packet type
+ * @param dup the MQTT dup flag
+ * @param packetid the MQTT packet identifier
+ * @return serialized length, or error if 0
+ */
 #if defined(MQTTV5)
-int32_t MQTTV5Serialize_ack(unsigned char* buf, int32_t buflen, unsigned char packettype, unsigned char dup, unsigned short packetid,
-	unsigned char reasonCode, MQTTProperties* properties)
+int32_t MQTTV5Serialize_ack(unsigned char *buf, size_t buflen, unsigned char packettype, unsigned char dup, unsigned short packetid,
+							unsigned char reasonCode, MQTTProperties *properties)
 #else
-int32_t MQTTSerialize_ack(unsigned char* buf, int32_t buflen, unsigned char packettype, unsigned char dup, unsigned short packetid)
+int32_t MQTTSerialize_ack(unsigned char *buf, size_t buflen, unsigned char packettype, unsigned char dup, unsigned short packetid)
 #endif
 {
-	MQTTHeader header = {0};
+	unsigned char header;
 	int32_t rc = 0;
 	unsigned char *ptr = buf;
 	int32_t len = 2;
 
 	FUNC_ENTRY;
 #if defined(MQTTV5)
-  if (reasonCode >= 0)
-	{
-		len += 1;
-		if (properties)
-		  len += MQTTProperties_len(properties);
-	}
+    // On détermine si on a besoin d'envoyer le bloc optionnel (Reason Code + Props)
+    int has_options = (reasonCode != 0 || (properties && properties->count > 0));
+    
+    if (has_options)
+    {
+        len += 1; // Le Reason Code
+        // On utilise la fonction de calcul qui inclut déjà le VBI (le 0x00 si vide)
+        len += MQTTProperties_len(properties); 
+    }
 #endif
-	if (buflen < 4)
-	{
-		rc = MQTTPACKET_BUFFER_TOO_SHORT;
-		goto exit;
-	}
-	header.bits.type = packettype;
-	header.bits.dup = dup;
-	header.bits.qos = (packettype == PUBREL) ? 1 : 0;
-	writeChar(&ptr, header.byte); /* write header */
+
+    // Vérification dynamique du buffer
+    if (MQTTPacket_len(len) > buflen) // MQTTPacket_len compte aussi le fixed header
+    {
+        rc = MQTTPACKET_BUFFER_TOO_SHORT;
+        goto exit;
+    }
+	header = 0;
+	header |= (packettype << MQTT_HEADER_TYPE_SHIFT);
+	header |= (dup << MQTT_HEADER_DUP_SHIFT);
+	header |= ((packettype == PUBREL) ? 1 : 0) << MQTT_HEADER_QOS_SHIFT;
+	writeChar(&ptr, header); /* write header */
 
 	ptr += MQTTPacket_encode_internal(ptr, len); /* write remaining length */
 	writeInt(&ptr, packetid);
 
 #if defined(MQTTV5)
-  if (reasonCode >= 0)
+	if (has_options)
 	{
 		writeChar(&ptr, reasonCode);
-    if (properties && MQTTProperties_write(&ptr, properties) < 0)
-		  goto exit;
+		if (MQTTProperties_write(&ptr, properties) < 0)
+		{
+			goto exit;
+		}
 	}
 #endif
 
@@ -178,19 +186,18 @@ exit:
 	return rc;
 }
 
-
 /**
-  * Serializes a puback packet into the supplied buffer.
-  * @param buf the buffer into which the packet will be serialized
-  * @param buflen the length in bytes of the supplied buffer
-  * @param packetid integer - the MQTT packet identifier
-  * @return serialized length, or error if 0
-  */
+ * Serializes a puback packet into the supplied buffer.
+ * @param buf the buffer into which the packet will be serialized
+ * @param buflen the length in bytes of the supplied buffer
+ * @param packetid integer - the MQTT packet identifier
+ * @return serialized length, or error if 0
+ */
 #if defined(MQTTV5)
-int32_t MQTTV5Serialize_puback(unsigned char* buf, int32_t buflen, unsigned short packetid,
-	  unsigned char reasonCode, MQTTProperties* properties)
+int32_t MQTTV5Serialize_puback(unsigned char *buf, size_t buflen, unsigned short packetid,
+							   unsigned char reasonCode, MQTTProperties *properties)
 #else
-int32_t MQTTSerialize_puback(unsigned char* buf, int32_t buflen, unsigned short packetid)
+int32_t MQTTSerialize_puback(unsigned char *buf, size_t buflen, unsigned short packetid)
 #endif
 {
 #if defined(MQTTV5)
@@ -201,18 +208,18 @@ int32_t MQTTSerialize_puback(unsigned char* buf, int32_t buflen, unsigned short 
 }
 
 /**
-  * Serializes a pubrec packet into the supplied buffer.
-  * @param buf the buffer into which the packet will be serialized
-  * @param buflen the length in bytes of the supplied buffer
-  * @param dup integer - the MQTT dup flag
-  * @param packetid integer - the MQTT packet identifier
-  * @return serialized length, or error if 0
-  */
+ * Serializes a pubrec packet into the supplied buffer.
+ * @param buf the buffer into which the packet will be serialized
+ * @param buflen the length in bytes of the supplied buffer
+ * @param dup integer - the MQTT dup flag
+ * @param packetid integer - the MQTT packet identifier
+ * @return serialized length, or error if 0
+ */
 #if defined(MQTTV5)
-int32_t MQTTV5Serialize_pubrec(unsigned char* buf, int32_t buflen, unsigned short packetid,
-	  unsigned char reasonCode, MQTTProperties* properties)
+int32_t MQTTV5Serialize_pubrec(unsigned char *buf, size_t buflen, unsigned short packetid,
+							   unsigned char reasonCode, MQTTProperties *properties)
 #else
-int32_t MQTTSerialize_pubrec(unsigned char* buf, int32_t buflen, unsigned short packetid)
+int32_t MQTTSerialize_pubrec(unsigned char *buf, size_t buflen, unsigned short packetid)
 #endif
 {
 #if defined(MQTTV5)
@@ -222,20 +229,19 @@ int32_t MQTTSerialize_pubrec(unsigned char* buf, int32_t buflen, unsigned short 
 #endif
 }
 
-
 /**
-  * Serializes a pubrel packet into the supplied buffer.
-  * @param buf the buffer into which the packet will be serialized
-  * @param buflen the length in bytes of the supplied buffer
-  * @param dup integer - the MQTT dup flag
-  * @param packetid integer - the MQTT packet identifier
-  * @return serialized length, or error if 0
-  */
+ * Serializes a pubrel packet into the supplied buffer.
+ * @param buf the buffer into which the packet will be serialized
+ * @param buflen the length in bytes of the supplied buffer
+ * @param dup integer - the MQTT dup flag
+ * @param packetid integer - the MQTT packet identifier
+ * @return serialized length, or error if 0
+ */
 #if defined(MQTTV5)
-int32_t MQTTV5Serialize_pubrel(unsigned char* buf, int32_t buflen, unsigned char dup, unsigned short packetid,
-	  unsigned char reasonCode, MQTTProperties* properties)
+int32_t MQTTV5Serialize_pubrel(unsigned char *buf, size_t buflen, unsigned char dup, unsigned short packetid,
+							   unsigned char reasonCode, MQTTProperties *properties)
 #else
-int32_t MQTTSerialize_pubrel(unsigned char* buf, int32_t buflen, unsigned char dup, unsigned short packetid)
+int32_t MQTTSerialize_pubrel(unsigned char *buf, size_t buflen, unsigned char dup, unsigned short packetid)
 #endif
 {
 #if defined(MQTTV5)
@@ -245,19 +251,18 @@ int32_t MQTTSerialize_pubrel(unsigned char* buf, int32_t buflen, unsigned char d
 #endif
 }
 
-
 /**
-  * Serializes a pubcomp packet into the supplied buffer.
-  * @param buf the buffer into which the packet will be serialized
-  * @param buflen the length in bytes of the supplied buffer
-  * @param packetid integer - the MQTT packet identifier
-  * @return serialized length, or error if 0
-  */
+ * Serializes a pubcomp packet into the supplied buffer.
+ * @param buf the buffer into which the packet will be serialized
+ * @param buflen the length in bytes of the supplied buffer
+ * @param packetid integer - the MQTT packet identifier
+ * @return serialized length, or error if 0
+ */
 #if defined(MQTTV5)
-int32_t MQTTV5Serialize_pubcomp(unsigned char* buf, int32_t buflen, unsigned short packetid,
-	  unsigned char reasonCode, MQTTProperties* properties)
+int32_t MQTTV5Serialize_pubcomp(unsigned char *buf, size_t buflen, unsigned short packetid,
+								unsigned char reasonCode, MQTTProperties *properties)
 #else
-int32_t MQTTSerialize_pubcomp(unsigned char* buf, int32_t buflen, unsigned short packetid)
+int32_t MQTTSerialize_pubcomp(unsigned char *buf, size_t buflen, unsigned short packetid)
 #endif
 {
 #if defined(MQTTV5)

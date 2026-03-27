@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
 
 	topicString.cstring = "pubtopic";
 
-	len = MQTTV5Serialize_publish(buf, buflen, 0, 0, 0, 0, topicString, &send_properties, 
+	len = MQTTV5Serialize_publish(buf, buflen, 0, 0, 0, 0, &topicString, &send_properties, 
 				(unsigned char *)payload, payloadlen);
 	rc = transport_sendPacketBuffer(mysock, buf, len);
 
@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
 					printf("publishing reading\n");
 				}
 
-				len = MQTTV5Serialize_publish(buf, buflen, 0, 0, 0, 0, topicString, &send_properties, 
+				len = MQTTV5Serialize_publish(buf, buflen, 0, 0, 0, 0, &topicString, &send_properties, 
 							(unsigned char *)payload, payloadlen);
 				rc = transport_sendPacketBuffer(mysock, buf, len);
 			}

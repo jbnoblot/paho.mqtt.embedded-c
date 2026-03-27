@@ -52,17 +52,17 @@ int readInt4(unsigned char** pptr)
 }
 
 
-void writeMQTTLenString(unsigned char** pptr, MQTTLenString lenstring)
+void writeMQTTLenString(unsigned char** pptr, const MQTTLenString* lenstring)
 {
-  writeInt(pptr, lenstring.len);
-  memcpy(*pptr, lenstring.data, lenstring.len);
-  *pptr += lenstring.len;
+  writeInt(pptr, lenstring->len);
+  memcpy(*pptr, lenstring->data, lenstring->len);
+  *pptr += lenstring->len;
 }
 
 
-int MQTTLenStringRead(MQTTLenString* lenstring, unsigned char** pptr, unsigned char* enddata)
+int MQTTLenStringRead(MQTTLenString* lenstring, unsigned char** pptr, const unsigned char* const enddata)
 {
-	int len = 0;
+	int len = -1;
 
 	/* the first two bytes are the length of the string */
 	if (enddata - (*pptr) > 1) /* enough length to read the integer? */

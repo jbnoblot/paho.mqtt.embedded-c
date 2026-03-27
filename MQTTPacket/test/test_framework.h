@@ -105,18 +105,30 @@ void MyLog(int LOGA_level, char* format, ...)
 {
 	static char msg_buf[256];
 	va_list args;
+#if defined(_WIN32) || defined(_WINDOWS)
 	struct timeb ts;
-
-	struct tm *timeinfo;
+#else
+	struct timeval ts;
+#endif
+	struct tm timeinfo;
 
 	if (LOGA_level == LOGA_DEBUG && options.verbose == 0)
 	  return;
 
+#if defined(_WIN32) || defined(_WINDOWS)
 	ftime(&ts);
-	timeinfo = localtime(&ts.time);
-	strftime(msg_buf, 80, "%Y%m%d %H%M%S", timeinfo);
+	localtime_s(&timeinfo, &ts.time);
+#else
+	gettimeofday(&ts, NULL);
+	localtime_r(&ts.tv_sec, &timeinfo);
+#endif
+	strftime(msg_buf, 80, "%Y%m%d %H%M%S", &timeinfo);
 
+#if defined(_WIN32) || defined(_WINDOWS)
 	sprintf(&msg_buf[strlen(msg_buf)], ".%.3hu ", ts.millitm);
+#else
+	sprintf(&msg_buf[strlen(msg_buf)], ".%.3lu ", ts.tv_usec / 1000L);
+#endif
 
 	va_start(args, format);
 	vsnprintf(&msg_buf[strlen(msg_buf)], sizeof(msg_buf) - strlen(msg_buf), format, args);
@@ -127,7 +139,7 @@ void MyLog(int LOGA_level, char* format, ...)
 }
 
 
-#if defined(WIN32) || defined(_WINDOWS)
+#if defined(_WIN32) || defined(_WINDOWS)
 #define mqsleep(A) Sleep(1000*A)
 #define START_TIME_TYPE DWORD
 static DWORD start_time = 0;
@@ -147,6 +159,7 @@ START_TIME_TYPE start_clock(void)
 #else
 #define mqsleep sleep
 #define START_TIME_TYPE struct timeval
+/* TODO - unused - remove? static struct timeval start_time; */
 START_TIME_TYPE start_clock(void)
 {
 	struct timeval start_time;
@@ -156,7 +169,8 @@ START_TIME_TYPE start_clock(void)
 #endif
 
 
-#if defined(WIN32)
+
+#if defined(_WIN32)
 long elapsed(START_TIME_TYPE start_time)
 {
 	return GetTickCount() - start_time;
@@ -178,10 +192,9 @@ long elapsed(START_TIME_TYPE start_time)
 
 	gettimeofday(&now, NULL);
 	timersub(&now, &start_time, &res);
-	return (res.tv_sec)*1000 + (res.tv_usec)/1000;
+	return (res.tv_sec) * 1000 + (res.tv_usec) / 1000;
 }
 #endif
-
 
 #define assert(a, b, c, d) myassert(__FILE__, __LINE__, a, b, c, d)
 #define assert1(a, b, c, d, e) myassert(__FILE__, __LINE__, a, b, c, d, e)

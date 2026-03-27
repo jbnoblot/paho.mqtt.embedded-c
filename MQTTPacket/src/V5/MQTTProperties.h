@@ -17,7 +17,8 @@
 #ifndef MQTTPROPERTIES_H_
 #define MQTTPROPERTIES_H_
 
-enum MQTTPropertyNames {
+typedef enum MQTTPropertyCodes
+{
   MQTTPROPERTY_CODE_PAYLOAD_FORMAT_INDICATOR = 1,
   MQTTPROPERTY_CODE_MESSAGE_EXPIRY_INTERVAL = 2,
   MQTTPROPERTY_CODE_CONTENT_TYPE = 3,
@@ -25,7 +26,7 @@ enum MQTTPropertyNames {
   MQTTPROPERTY_CODE_CORRELATION_DATA = 9,
   MQTTPROPERTY_CODE_SUBSCRIPTION_IDENTIFIER = 11,
   MQTTPROPERTY_CODE_SESSION_EXPIRY_INTERVAL = 17,
-  MQTTPROPERTY_CODE_ASSIGNED_CLIENT_IDENTIFER = 18,
+  MQTTPROPERTY_CODE_ASSIGNED_CLIENT_IDENTIFIER = 18,
   MQTTPROPERTY_CODE_SERVER_KEEP_ALIVE = 19,
   MQTTPROPERTY_CODE_AUTHENTICATION_METHOD = 21,
   MQTTPROPERTY_CODE_AUTHENTICATION_DATA = 22,
@@ -45,9 +46,10 @@ enum MQTTPropertyNames {
   MQTTPROPERTY_CODE_WILDCARD_SUBSCRIPTION_AVAILABLE = 40,
   MQTTPROPERTY_CODE_SUBSCRIPTION_IDENTIFIER_AVAILABLE = 41,
   MQTTPROPERTY_CODE_SHARED_SUBSCRIPTION_AVAILABLE = 42
-};
+} MQTTPropertyCodes;
 
-enum MQTTPropertyTypes {
+typedef enum MQTTPropertyTypes
+{
   MQTTPROPERTY_TYPE_BYTE,
   MQTTPROPERTY_TYPE_TWO_BYTE_INTEGER,
   MQTTPROPERTY_TYPE_FOUR_BYTE_INTEGER,
@@ -55,20 +57,22 @@ enum MQTTPropertyTypes {
   MQTTPROPERTY_TYPE_BINARY_DATA,
   MQTTPROPERTY_TYPE_UTF_8_ENCODED_STRING,
   MQTTPROPERTY_TYPE_UTF_8_STRING_PAIR
-};
+} MQTTPropertyTypes;
 
-typedef struct {
+typedef struct
+{
   MQTTLenString key;
   MQTTLenString val;
 } MQTTStringPair;
 
 typedef struct
 {
-  int identifier; /* mbi */
-  union {
-    char byte;
-    short integer2;
-    int integer4;
+  MQTTPropertyCodes identifier; /* mbi */
+  union
+  {
+    int8_t byte;
+    int16_t integer2;
+    int32_t integer4;
     MQTTLenString data;
     MQTTStringPair string_pair; /* for user properties */
   } value;
@@ -76,15 +80,16 @@ typedef struct
 
 typedef struct MQTTProperties
 {
-  int count; /* number of property entries */
-  int max_count;
-  int length; /* mbi: byte length of all properties */
-  MQTTProperty *array;  /* array of properties */
+  int count;           /**< number of property entries in the array */
+  int max_count;       /**< max number of properties that the currently allocated array can store */
+  uint32_t length;          /**< mbi: byte length of all properties */
+  char truncateProperties; /** If true, the MQTTv5 properties will be truncated if they do not fit in buffer. */
+  MQTTProperty *array; /**< array of properties */
 } MQTTProperties;
 
-#define MQTTProperties_initializer {0, 0, 0, NULL}
+#define MQTTProperties_initializer {0, 0, 0, 0, NULL}
 
-DLLExport int MQTTProperties_len(MQTTProperties* props);
+DLLExport int MQTTProperties_len(const MQTTProperties* props);
 
 /**
  * Add the property pointer to the property array, no allocation, just a reference
@@ -92,17 +97,17 @@ DLLExport int MQTTProperties_len(MQTTProperties* props);
  * @param prop
  * @return whether the write succeeded or not, number of bytes written or < 0
  */
-DLLExport int MQTTProperties_add(MQTTProperties* props, MQTTProperty* prop);
+DLLExport int MQTTProperties_add(MQTTProperties* props, const MQTTProperty* prop);
 
-DLLExport int MQTTProperties_write(unsigned char** pptr, MQTTProperties* properties);
+DLLExport int MQTTProperties_write(unsigned char** pptr, const MQTTProperties* properties);
 
-DLLExport int MQTTProperties_read(MQTTProperties* properties, unsigned char** pptr, unsigned char* enddata);
+DLLExport int MQTTProperties_read(MQTTProperties* properties, unsigned char** pptr, const unsigned char* enddata);
 
 /**
  * @brief MQTTProperty_getType returns the type of the property based on the identifier (key).
  * @param identifier the `PropertyNames` property identifier.
  * @return the `PropertyTypes` type of the property
  */
-DLLExport int MQTTProperty_getType(int identifier);
+DLLExport int MQTTProperty_getType(MQTTPropertyCodes identifier);
 
 #endif // MQTTPROPERTIES_H_

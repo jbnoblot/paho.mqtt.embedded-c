@@ -40,10 +40,10 @@ struct Network
 	void (*disconnect) (Network*);
 };
 
-char expired(Timer*);
+char expired(const Timer*);
 void countdown_ms(Timer*, unsigned int);
 void countdown(Timer*, unsigned int);
-int left_ms(Timer*);
+int left_ms(const Timer*);
 
 void InitTimer(Timer*);
 

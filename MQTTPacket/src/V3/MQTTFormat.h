@@ -17,8 +17,8 @@
 #if !defined(MQTTFORMAT_H)
 #define MQTTFORMAT_H
 
-#include "StackTrace.h"
-#include "MQTTPacket.h"
+#include "../StackTrace.h"
+#include "../MQTTPacket.h"
 
 const char* MQTTPacket_getName(unsigned short packetid);
 int MQTTStringFormat_connect(char* strbuf, int strbuflen, MQTTPacket_connectData* data);
@@ -31,7 +31,7 @@ int MQTTStringFormat_subscribe(char* strbuf, int strbuflen, unsigned char dup, u
 int MQTTStringFormat_suback(char* strbuf, int strbuflen, unsigned short packetid, int count, unsigned char* grantedQoSs);
 int MQTTStringFormat_unsubscribe(char* strbuf, int strbuflen, unsigned char dup, unsigned short packetid,
 		int count, MQTTString topicFilters[]);
-char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf, int32_t buflen);
-char* MQTTFormat_toServerString(char* strbuf, int strbuflen, unsigned char* buf, int32_t buflen);
+char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf, size_t buflen);
+char* MQTTFormat_toServerString(char* strbuf, int strbuflen, unsigned char* buf, size_t buflen);
 
 #endif

@@ -168,7 +168,7 @@ VERSION = ${MAJOR_VERSION}.${MINOR_VERSION}
 EMBED_MQTTLIB_C_TARGET = ${blddir}/lib${MQTT_EMBED_LIB_C}.so.${VERSION}
 
 
-CCFLAGS_SO = -g -fPIC -Os -Wall -fvisibility=hidden -Wno-deprecated-declarations -DUSE_NAMED_SEMAPHORES
+CCFLAGS_SO = -g -fPIC -Os -Wall -Wextra -Wpedantic -fvisibility=hidden -Wno-deprecated-declarations -DUSE_NAMED_SEMAPHORES
 FLAGS_EXE = -I ${srcdir}  -L ${blddir}
 
 LDFLAGS_C = -shared -Wl,-install_name,lib$(MQTT_EMBED_LIB_C).so.${MAJOR_VERSION}

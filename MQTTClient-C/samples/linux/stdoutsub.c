@@ -3,11 +3,11 @@
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
- * and Eclipse Distribution License v1.0 which accompany this distribution. 
+ * and Eclipse Distribution License v1.0 which accompany this distribution.
  *
- * The Eclipse Public License is available at 
+ * The Eclipse Public License is available at
  *   http://www.eclipse.org/legal/epl-v10.html
- * and the Eclipse Distribution License is available at 
+ * and the Eclipse Distribution License is available at
  *   http://www.eclipse.org/org/documents/edl-v10.php.
  *
  * Contributors:
@@ -18,27 +18,27 @@
  *******************************************************************************/
 
 /*
- 
+
  stdout subscriber
- 
+
  compulsory parameters:
- 
+
   topic to subscribe to
- 
+
  defaulted parameters:
- 
+
 	--host localhost
 	--port 1883
 	--qos 2
 	--delimiter \n
 	--clientid stdout_subscriber
-	
+
 	--userid none
 	--password none
 
  for example:
 
-    stdoutsub topic/of/interest --host iot.eclipse.org
+	stdoutsub topic/of/interest --host iot.eclipse.org
 
 */
 #include <stdio.h>
@@ -50,9 +50,7 @@
 
 #include <sys/time.h>
 
-
 volatile int toStop = 0;
-
 
 void usage()
 {
@@ -69,35 +67,31 @@ void usage()
 	exit(-1);
 }
 
-
 void cfinish(int sig)
 {
 	signal(SIGINT, NULL);
 	toStop = 1;
 }
 
-
 struct opts_struct
 {
-	char* clientid;
+	char *clientid;
 	int nodelimiter;
-	char* delimiter;
+	char *delimiter;
 	enum MQTTQoS qos;
-	char* username;
-	char* password;
-	char* host;
+	char *username;
+	char *password;
+	char *host;
 	int port;
 	int showtopics;
 } opts =
-{
-	(char*)"stdout-subscriber", 0, (char*)"\n", MQTTQOS_2, NULL, NULL, (char*)"localhost", 1883, 0
-};
+	{
+		(char *)"stdout-subscriber", 0, (char *)"\n", MQTTQOS_2, NULL, NULL, (char *)"localhost", 1883, 0};
 
-
-void getopts(int argc, char** argv)
+void getopts(int argc, char **argv)
 {
 	int count = 2;
-	
+
 	while (count < argc)
 	{
 		if (strcmp(argv[count], "--qos") == 0)
@@ -174,41 +168,98 @@ void getopts(int argc, char** argv)
 		}
 		count++;
 	}
-	
 }
 
-
-void messageArrived(MessageData* md)
+void messageArrived(MessageData *md)
 {
-	MQTTMessage* message = md->message;
+	MQTTMessage *message = md->message;
 
 	if (opts.showtopics)
 		printf("%.*s\t", md->topicName->lenstring.len, md->topicName->lenstring.data);
 	if (opts.nodelimiter)
-		printf("%.*s", (int)message->payloadlen, (char*)message->payload);
+		printf("%.*s", (int)message->payloadlen, (char *)message->payload);
 	else
-		printf("%.*s%s", (int)message->payloadlen, (char*)message->payload, opts.delimiter);
-	//fflush(stdout);
+		printf("%.*s%s", (int)message->payloadlen, (char *)message->payload, opts.delimiter);
 }
 
-
-int main(int argc, char** argv)
+#if defined(MQTTV5)
+int main(int argc, char **argv)
 {
 	int rc = 0;
 	unsigned char buf[100];
 	unsigned char readbuf[100];
-	
+
 	if (argc < 2)
 		usage();
-	
-	char* topic = argv[1];
+
+	char *topic = argv[1];
 
 	if (strchr(topic, '#') || strchr(topic, '+'))
 		opts.showtopics = 1;
 	if (opts.showtopics)
 		printf("topic is %s\n", topic);
 
-	getopts(argc, argv);	
+	getopts(argc, argv);
+
+	Network n;
+	MQTTClient c;
+
+	signal(SIGINT, cfinish);
+	signal(SIGTERM, cfinish);
+
+	NetworkInit(&n);
+	NetworkConnect(&n, opts.host, opts.port);
+	MQTTV5ClientInit(&c, &n, 1000, buf, 100, readbuf, 100);
+
+	MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
+	data.willFlag = 0;
+	data.MQTTVersion = 3;
+	data.clientID.cstring = opts.clientid;
+	data.username.cstring = opts.username;
+	data.password.cstring = opts.password;
+
+	data.keepAliveInterval = 10;
+	data.cleansession = 1;
+	printf("Connecting to %s %d\n", opts.host, opts.port);
+
+	rc = MQTTV5Connect(&c, &data);
+	printf("Connected %d\n", rc);
+
+	printf("Subscribing to %s\n", topic);
+	rc = MQTTV5Subscribe(&c, topic, opts.qos, messageArrived);
+	printf("Subscribed %d\n", rc);
+
+	while (!toStop)
+	{
+		MQTTYield(&c, 1000);
+	}
+
+	printf("Stopping\n");
+
+	MQTTV5Disconnect(&c);
+	NetworkDisconnect(&n);
+
+	return 0;
+}
+
+#else
+int main(int argc, char **argv)
+{
+	int rc = 0;
+	unsigned char buf[100];
+	unsigned char readbuf[100];
+
+	if (argc < 2)
+		usage();
+
+	char *topic = argv[1];
+
+	if (strchr(topic, '#') || strchr(topic, '+'))
+		opts.showtopics = 1;
+	if (opts.showtopics)
+		printf("topic is %s\n", topic);
+
+	getopts(argc, argv);
 
 	Network n;
 	MQTTClient c;
@@ -219,8 +270,8 @@ int main(int argc, char** argv)
 	NetworkInit(&n);
 	NetworkConnect(&n, opts.host, opts.port);
 	MQTTClientInit(&c, &n, 1000, buf, 100, readbuf, 100);
- 
-	MQTTPacket_connectData data = MQTTPacket_connectData_initializer;       
+
+	MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
 	data.willFlag = 0;
 	data.MQTTVersion = 3;
 	data.clientID.cstring = opts.clientid;
@@ -230,19 +281,19 @@ int main(int argc, char** argv)
 	data.keepAliveInterval = 10;
 	data.cleansession = 1;
 	printf("Connecting to %s %d\n", opts.host, opts.port);
-	
+
 	rc = MQTTConnect(&c, &data);
 	printf("Connected %d\n", rc);
-    
-    printf("Subscribing to %s\n", topic);
+
+	printf("Subscribing to %s\n", topic);
 	rc = MQTTSubscribe(&c, topic, opts.qos, messageArrived);
 	printf("Subscribed %d\n", rc);
 
 	while (!toStop)
 	{
-		MQTTYield(&c, 1000);	
+		MQTTYield(&c, 1000);
 	}
-	
+
 	printf("Stopping\n");
 
 	MQTTDisconnect(&c);
@@ -251,4 +302,4 @@ int main(int argc, char** argv)
 	return 0;
 }
 
-
+#endif

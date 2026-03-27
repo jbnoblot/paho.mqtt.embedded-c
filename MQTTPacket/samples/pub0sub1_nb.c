@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 					&payload_in, &payloadlen_in, buf, buflen);
 			printf("message arrived %.*s\n", payloadlen_in, payload_in);
 			printf("publishing reading\n");
-			len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, topicString, (unsigned char*)payload, payloadlen);
+			len = MQTTSerialize_publish(buf, buflen, 0, 0, 0, 0, &topicString, (unsigned char*)payload, payloadlen);
 			rc = transport_sendPacketBuffer(mysock, buf, len);
 		}
 	}

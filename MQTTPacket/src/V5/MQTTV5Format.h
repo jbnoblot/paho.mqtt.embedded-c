@@ -15,7 +15,7 @@
 #if !defined(MQTTV5FORMAT_H)
 #define MQTTV5FORMAT_H
 
-#include "StackTrace.h"
+#include "../StackTrace.h"
 #include "MQTTV5Packet.h"
 
 const char* MQTTV5Packet_getName(unsigned short packetid);
@@ -29,7 +29,7 @@ int MQTTV5StringFormat_subscribe(char* strbuf, int strbuflen, unsigned char dup,
 int MQTTV5StringFormat_suback(char* strbuf, int strbuflen, unsigned short packetid, int count, unsigned char* grantedQoSs);
 int MQTTV5StringFormat_unsubscribe(char* strbuf, int strbuflen, unsigned char dup, unsigned short packetid,
 		int count, MQTTString topicFilters[]);
-char* MQTTV5Format_toClientString(char* strbuf, int strbuflen, unsigned char* buf, int32_t buflen);
-char* MQTTV5Format_toServerString(char* strbuf, int strbuflen, unsigned char* buf, int32_t buflen);
+char* MQTTV5Format_toClientString(char* strbuf, int strbuflen, unsigned char* buf, size_t buflen);
+char* MQTTV5Format_toServerString(char* strbuf, int strbuflen, unsigned char* buf, size_t buflen);
 
 #endif
