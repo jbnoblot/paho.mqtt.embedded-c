@@ -206,12 +206,9 @@ int MQTTDeserialize_connack(unsigned char* sessionPresent, unsigned char* connac
 	*connack_rc = readChar(&curdata);
 
 #if defined(MQTTV5)
-	if (connackProperties)
-	{
-		rc = MQTTProperties_read(connackProperties, &curdata, enddata);
-		if (rc < 0) {
-		  goto exit;
-		}
+	rc = MQTTProperties_read(connackProperties, &curdata, enddata);
+	if (rc < 0) {
+		goto exit;
 	}
 #endif
 
@@ -246,9 +243,7 @@ int MQTTSerialize_zero(unsigned char* buf, size_t buflen, unsigned char packetty
 	if (reasonCode >= 0 && reasonCode <= 162)
 	{
 		len += 1;
-		if (properties) {
-			len += MQTTProperties_len(properties);
-		}
+		len += MQTTProperties_len(properties);
 	}
 #endif
 	if (MQTTPacket_len(len) > buflen)
@@ -265,9 +260,7 @@ int MQTTSerialize_zero(unsigned char* buf, size_t buflen, unsigned char packetty
 	if (reasonCode >= 0 && reasonCode <= 162)
 	{
 		writeChar(&ptr, reasonCode); /* must have reasonCode before properties */
-		if (properties) {
-			MQTTProperties_write(&ptr, properties);
-		}
+		MQTTProperties_write(&ptr, properties);
 	}
 #endif
 	rc = ptr - buf;

@@ -40,11 +40,11 @@ int32_t MQTTSerialize_subscribeLength(int count, const MQTTString topicFilters[]
 	int i;
 	int32_t len = 2; /* packetid */
 
-	for (i = 0; i < count; ++i)
+	for (i = 0; i < count; ++i) { 
 		len += 2 + MQTTstrlen(&topicFilters[i]) + 1; /* length + topic + req_qos */
+	}
 #if defined(MQTTV5)
-	if (properties)
-		len += MQTTProperties_len(properties);
+	len += MQTTProperties_len(properties);
 #endif
 	return len;
 }
@@ -97,7 +97,7 @@ int32_t MQTTSerialize_subscribe(unsigned char *buf, size_t buflen, unsigned char
 	writeInt(&ptr, packetid);
 
 #if defined(MQTTV5)
-	if (properties && MQTTProperties_write(&ptr, properties) < 0)
+	if (MQTTProperties_write(&ptr, properties) < 0)
 	{
 		goto exit;
 	}
@@ -172,13 +172,10 @@ int MQTTDeserialize_suback(unsigned short *packetid, int maxcount, int *count, u
 	*packetid = readInt(&curdata);
 
 #if defined(MQTTV5)
-	if (properties)
+	rc = MQTTProperties_read(properties, &curdata, enddata);
+	if (rc < 0)
 	{
-		rc = MQTTProperties_read(properties, &curdata, enddata);
-		if (rc < 0)
-		{
-			goto exit;
-		}
+		goto exit;
 	}
 #endif
 	if (maxcount > 0)

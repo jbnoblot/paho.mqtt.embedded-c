@@ -44,9 +44,7 @@ int32_t MQTTSerialize_unsubscribeLength(int count, MQTTString topicFilters[])
 		len += 2 + MQTTstrlen(&topicFilters[i]); /* length + topic*/
 	}
 #if defined(MQTTV5)
-	if (properties) {
-		len += MQTTProperties_len(properties);
-	}
+	len += MQTTProperties_len(properties);
 #endif
 	return len;
 }
@@ -98,7 +96,7 @@ int32_t MQTTSerialize_unsubscribe(unsigned char* buf, size_t buflen, unsigned ch
 	writeInt(&ptr, packetid);
 
 #if defined(MQTTV5)
-	if (properties && MQTTProperties_write(&ptr, properties) < 0) {
+	if (MQTTProperties_write(&ptr, properties) < 0) {
 		goto exit;
 	}
 #endif

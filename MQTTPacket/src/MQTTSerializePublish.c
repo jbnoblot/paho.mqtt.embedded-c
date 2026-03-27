@@ -42,11 +42,11 @@ int32_t MQTTSerialize_publishLength(int qos, const MQTTString *topicName, int pa
 	int32_t len = 0;
 
 	len += 2 + MQTTstrlen(topicName) + payloadlen;
-	if (qos > 0)
+	if (qos > 0) {
 		len += 2; /* packetid */
+	}
 #if defined(MQTTV5)
-	if (properties)
-		len += MQTTProperties_len(properties);
+	len += MQTTProperties_len(properties);
 #endif
 	return len;
 }
@@ -79,10 +79,11 @@ int32_t MQTTSerialize_publish(unsigned char *buf, size_t buflen, unsigned char d
 
 	FUNC_ENTRY;
 #if defined(MQTTV5)
-	if (MQTTPacket_len(rem_len = MQTTV5Serialize_publishLength(qos, topicName, payloadlen, properties)) > buflen)
+	rem_len = MQTTV5Serialize_publishLength(qos, topicName, payloadlen, properties);
 #else
-	if (MQTTPacket_len(rem_len = MQTTSerialize_publishLength(qos, topicName, payloadlen)) > buflen)
+	rem_len = MQTTSerialize_publishLength(qos, topicName, payloadlen);
 #endif
+	if (MQTTPacket_len(rem_len) > buflen)
 	{
 		rc = MQTTPACKET_BUFFER_TOO_SHORT;
 		goto exit;
@@ -96,7 +97,6 @@ int32_t MQTTSerialize_publish(unsigned char *buf, size_t buflen, unsigned char d
 	writeChar(&ptr, header); /* write header */
 
 	ptr += MQTTPacket_encode_internal(ptr, rem_len); /* write remaining length */
-	;
 
 	writeMQTTString(&ptr, topicName);
 
@@ -105,8 +105,7 @@ int32_t MQTTSerialize_publish(unsigned char *buf, size_t buflen, unsigned char d
 		writeInt(&ptr, packetid);
 	}
 #if defined(MQTTV5)
-	if (properties && MQTTProperties_write(&ptr, properties) < 0)
-	{
+	if (MQTTProperties_write(&ptr, properties) < 0) {
 		goto exit;
 	}
 #endif
@@ -144,19 +143,23 @@ int32_t MQTTSerialize_ack(unsigned char *buf, size_t buflen, unsigned char packe
 
 	FUNC_ENTRY;
 #if defined(MQTTV5)
-	if (reasonCode >= 0)
-	{
-		len += 1;
-		if (properties) {
-			len += MQTTProperties_len(properties);
-		}
-	}
+    // On détermine si on a besoin d'envoyer le bloc optionnel (Reason Code + Props)
+    int has_options = (reasonCode != 0 || (properties && properties->count > 0));
+    
+    if (has_options)
+    {
+        len += 1; // Le Reason Code
+        // On utilise la fonction de calcul qui inclut déjà le VBI (le 0x00 si vide)
+        len += MQTTProperties_len(properties); 
+    }
 #endif
-	if (buflen < 4)
-	{
-		rc = MQTTPACKET_BUFFER_TOO_SHORT;
-		goto exit;
-	}
+
+    // Vérification dynamique du buffer
+    if (MQTTPacket_len(len) > buflen) // MQTTPacket_len compte aussi le fixed header
+    {
+        rc = MQTTPACKET_BUFFER_TOO_SHORT;
+        goto exit;
+    }
 	header = 0;
 	header |= (packettype << MQTT_HEADER_TYPE_SHIFT);
 	header |= (dup << MQTT_HEADER_DUP_SHIFT);
@@ -167,10 +170,10 @@ int32_t MQTTSerialize_ack(unsigned char *buf, size_t buflen, unsigned char packe
 	writeInt(&ptr, packetid);
 
 #if defined(MQTTV5)
-	if (reasonCode >= 0)
+	if (has_options)
 	{
 		writeChar(&ptr, reasonCode);
-		if (properties && MQTTProperties_write(&ptr, properties) < 0)
+		if (MQTTProperties_write(&ptr, properties) < 0)
 		{
 			goto exit;
 		}

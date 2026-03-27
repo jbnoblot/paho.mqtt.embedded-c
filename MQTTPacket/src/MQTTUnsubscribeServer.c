@@ -50,7 +50,7 @@ int MQTTDeserialize_unsubscribe(unsigned char *dup, unsigned short *packetid, in
 	int rc = 0;
 	uint32_t mylen = 0
 
-		FUNC_ENTRY;
+	FUNC_ENTRY;
 	header = readChar(&curdata);
 	if ((header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT != UNSUBSCRIBE)
 		goto exit;
@@ -67,20 +67,17 @@ int MQTTDeserialize_unsubscribe(unsigned char *dup, unsigned short *packetid, in
 
 
 #if defined(MQTTV5)
-	if (properties)
+	if (enddata == curdata)
 	{
-		if (enddata == curdata)
+		properties->length = 0;
+		properties->count = 0; /* signal that no properties were received */
+	}
+	else
+	{
+		rc = MQTTProperties_read(properties, &curdata, enddata);
+		if (rc < 0)
 		{
-			properties->length = 0;
-			properties->count = 0; /* signal that no properties were received */
-		}
-		else
-		{
-			rc = MQTTProperties_read(properties, &curdata, enddata);
-			if (rc < 0)
-			{
-				goto exit;
-			}
+			goto exit;
 		}
 	}
 #endif
@@ -123,10 +120,7 @@ int32_t MQTTSerialize_unsuback(unsigned char *buf, size_t buflen, unsigned short
 
 	FUNC_ENTRY;
 #if defined(MQTTV5)
-	if (properties)
-	{
-		len += MQTTProperties_len(properties);
-	}
+	len += MQTTProperties_len(properties);
 	len += count;
 #endif
 	if (buflen < len)
@@ -143,7 +137,7 @@ int32_t MQTTSerialize_unsuback(unsigned char *buf, size_t buflen, unsigned short
 	writeInt(&ptr, packetid);
 
 #if defined(MQTTV5)
-	if (properties && MQTTProperties_write(&ptr, properties) < 0)
+	if (MQTTProperties_write(&ptr, properties) < 0)
 		goto exit;
 
 	if (reasonCodes)

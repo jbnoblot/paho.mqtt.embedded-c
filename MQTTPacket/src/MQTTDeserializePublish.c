@@ -76,13 +76,10 @@ int MQTTDeserialize_publish(unsigned char *dup, unsigned char *qos, unsigned cha
 	}
 
 #if defined(MQTTV5)
-	if (properties)
+	rc = MQTTProperties_read(properties, &curdata, enddata);
+	if (rc < 0)
 	{
-		rc = MQTTProperties_read(properties, &curdata, enddata);
-		if (rc < 0)
-		{
-			goto exit;
-		}
+		goto exit;
 	}
 #endif
 
@@ -123,10 +120,18 @@ int MQTTDeserialize_ack(unsigned char *packettype, unsigned char *dup, unsigned 
 	*dup = (header & MQTT_HEADER_DUP_MASK) != 0;
 	*packettype = (header & MQTT_HEADER_TYPE_MASK) >> MQTT_HEADER_TYPE_SHIFT;
 	rc = MQTTPacket_decodeBuf(curdata, &mylen); /* read remaining length */
-	if (rc == 0)
+	if (rc < 0)
 	{
 		goto exit;
 	}
+	// --- AJOUT DE SÉCURITÉ ICI ---
+    // On vérifie que la longueur annoncée (mylen) + le header (1 octet) 
+    // + la longueur elle-même (rc octets) ne dépasse pas buflen
+    if ((1 + rc + mylen) > buflen)
+    {
+        rc = 0; // Paquet invalide/incomplet
+        goto exit;
+    }
 	curdata += rc;
 	enddata = curdata + mylen;
 
@@ -136,7 +141,7 @@ int MQTTDeserialize_ack(unsigned char *packettype, unsigned char *dup, unsigned 
 	}
 	*packetid = readInt(&curdata);
 
-#if defined(MQTTV5)
+	#if defined(MQTTV5)
 	if (reasonCode)
 	{
 		if (enddata == curdata) /* no reason code, or properties */
@@ -148,21 +153,17 @@ int MQTTDeserialize_ack(unsigned char *packettype, unsigned char *dup, unsigned 
 			*reasonCode = (unsigned char)readChar(&curdata);
 		}
 	}
-
-	if (properties)
+	if (enddata == curdata)
 	{
-		if (enddata == curdata)
+		properties->length = 0;
+		properties->count = 0; /* signal that no properties were received */
+	}
+	else
+	{
+		rc = MQTTProperties_read(properties, &curdata, enddata);
+		if (rc < 0)
 		{
-			properties->length = 0;
-			properties->count = 0; /* signal that no properties were received */
-		}
-		else
-		{
-			rc = MQTTProperties_read(properties, &curdata, enddata);
-			if (rc < 0)
-			{
-				goto exit;
-			}
+			goto exit;
 		}
 	}
 #endif

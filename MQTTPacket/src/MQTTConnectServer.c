@@ -110,13 +110,10 @@ int MQTTDeserialize_connect(MQTTPacket_connectData *data, unsigned char *buf, in
 #if defined(MQTTV5)
 		if (data->MQTTVersion == 5)
 		{
-			if (connectProperties)
+			rc = MQTTProperties_read(connectProperties, &curdata, enddata);
+			if (rc < 0)
 			{
-				rc = MQTTProperties_read(connectProperties, &curdata, enddata);
-				if (rc < 0)
-				{
-					goto exit;
-				}
+				goto exit;
 			}
 		}
 #endif
@@ -185,7 +182,7 @@ int32_t MQTTSerialize_connack(unsigned char *buf, size_t buflen, unsigned char c
 	FUNC_ENTRY;
 
 #if defined(MQTTV5)
-	len = 2 + (connackProperties == NULL ? 0 : connackProperties->length);
+    len = 2 + MQTTProperties_len(connackProperties);
 #else
 	len = 2;
 #endif
@@ -207,8 +204,10 @@ int32_t MQTTSerialize_connack(unsigned char *buf, size_t buflen, unsigned char c
 	writeChar(&ptr, connack_rc);
 
 #if defined(MQTTV5)
-	if (connackProperties && MQTTProperties_write(&ptr, connackProperties) < 0)
+	rc = MQTTProperties_write(&ptr, connackProperties);
+	if (rc < 0) {
 		goto exit;
+	}
 #endif
 
 	rc = ptr - buf;

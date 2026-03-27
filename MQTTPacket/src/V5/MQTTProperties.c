@@ -15,6 +15,8 @@
  *******************************************************************************/
 
 #include "MQTTV5Packet.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
@@ -182,25 +184,30 @@ int MQTTProperty_write(unsigned char** pptr, const MQTTProperty* prop)
 int MQTTProperties_write(unsigned char** pptr, const MQTTProperties* properties)
 {
   int rc = -1;
-  int len = 0;
+  int total_written = 0;
+  int prop_data_len = (properties == NULL) ? 0 : properties->length;
 
   /* write the entire property list length first */
-  *pptr += MQTTPacket_encode(*pptr, properties->length);
-  rc = 1;
-  len = 1;
+  total_written = MQTTPacket_encode(*pptr, prop_data_len);
+  *pptr += total_written;
+
+  /* 2. Si pas de propriétés, on s'arrête là. On a fini d'écrire le 0x00. */
+  if (properties == NULL || properties->count == 0)
+  {
+    return total_written;
+  }
+
   for (int i = 0; i < properties->count; ++i)
   {
     rc = MQTTProperty_write(pptr, &properties->array[i]);
-    if (rc < 0)
-      break;
-    else
-      len += rc;
-  }
-  if (rc >= 0) {
-    rc = len;
+    if (rc < 0) {
+      return rc;
+    }
+    
+    total_written += rc;
   }
 
-  return rc;
+  return total_written;
 }
 
 
@@ -254,21 +261,36 @@ int MQTTProperty_read(MQTTProperty* prop, unsigned char** pptr, const unsigned c
 int MQTTProperties_read(MQTTProperties* properties, unsigned char** pptr, const unsigned char* enddata)
 {
     uint32_t remlength = 0;
-    properties->count = 0;
 
     // 1. Décodage sécurisé de la longueur des propriétés
     if (enddata - (*pptr) < 1) {
       return -1; 
     }
-    *pptr += MQTTPacket_decodeBuf(*pptr, &remlength);
-    
-    properties->length = remlength;
-    unsigned char* expected_end = *pptr + remlength;
+    int rc = MQTTPacket_decodeBuf(*pptr, &remlength);
+    if (rc <= 0) {
+      return -1; 
+    }
+    *pptr += rc;
 
+    unsigned char* expected_end = *pptr + remlength;
     // Vérification de sécurité : le bloc de propriétés dépasse-t-il le buffer ?
     if (expected_end > enddata) {
+      printf("--- CRASH DEBUG ---\n");
+      printf("remlength lue : %u octets\n", remlength);
+      printf("Octets lus (rc): %d\n", rc);
+      printf("Espace restant  : %ld octets\n", (long)(enddata - *pptr));
+      printf("-------------------\n");
       return -1;
     }
+
+        /* 2. CAS A : L'utilisateur a passé NULL (il veut juste "sauter") */
+    if (properties == NULL) {
+        *pptr = expected_end; // On saute directement à la fin
+        return 1; // Succès (mais rien stocké)
+    }
+    
+    properties->count = 0;
+    properties->length = remlength;
 
     // 2. Lecture des propriétés
     while (*pptr < expected_end)
@@ -282,7 +304,9 @@ int MQTTProperties_read(MQTTProperties* properties, unsigned char** pptr, const 
         else if(properties->truncateProperties)
         {
             break;
-        } else {
+        } 
+        else 
+        {
             // PLUS DE PLACE et pas de truncation : on arrête la lecture, c'est une erreur
             return -2;
         }
