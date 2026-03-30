@@ -31,7 +31,7 @@ extern "C" {
 
 void writeInt4(unsigned char** pptr, int anInt);
 int readInt4(unsigned char** pptr);
-void writeMQTTLenString(unsigned char** pptr, const MQTTLenString* lenstring);
+void writeMQTTLenString(unsigned char** pptr, MQTTLenString lenstring);
 int MQTTLenStringRead(MQTTLenString* lenstring, unsigned char** pptr, const unsigned char* enddata);
 
 DLLExport int32_t MQTTV5Serialize_ack(unsigned char* buf, size_t buflen, unsigned char packettype, unsigned char dup, unsigned short packetid,
