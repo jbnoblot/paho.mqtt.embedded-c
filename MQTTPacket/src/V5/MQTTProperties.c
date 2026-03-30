@@ -158,12 +158,12 @@ int MQTTProperty_write(unsigned char** pptr, const MQTTProperty* prop)
         break;
       case MQTTPROPERTY_TYPE_BINARY_DATA:
       case MQTTPROPERTY_TYPE_UTF_8_ENCODED_STRING:
-        writeMQTTLenString(pptr, &prop->value.data);
+        writeMQTTLenString(pptr, prop->value.data);
         rc = prop->value.data.len + 2; /* include length field */
         break;
       case MQTTPROPERTY_TYPE_UTF_8_STRING_PAIR:
-        writeMQTTLenString(pptr, &prop->value.string_pair.key);
-        writeMQTTLenString(pptr, &prop->value.string_pair.val);
+        writeMQTTLenString(pptr, prop->value.string_pair.key);
+        writeMQTTLenString(pptr, prop->value.string_pair.val);
         rc = prop->value.string_pair.key.len + prop->value.string_pair.val.len + 4; /* include length fields */
         break;
     }
