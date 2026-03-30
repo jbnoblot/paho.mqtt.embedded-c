@@ -85,6 +85,10 @@ int MQTTDeserialize_unsubscribe(unsigned char *dup, unsigned short *packetid, in
 	*count = 0;
 	while (curdata < enddata)
 	{
+		if (*count >= maxcount) {
+			rc = 0;
+			goto exit;
+		}
 		if (!readMQTTLenString(&topicFilters[*count], &curdata, enddata))
 			goto exit;
 		(*count)++;
