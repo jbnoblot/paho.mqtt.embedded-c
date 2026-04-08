@@ -734,7 +734,7 @@ int MQTTSubscribeWithResults(MQTTClient *c, const char *topicFilter, enum MQTTQo
         data->grantedQoS = grantedQoS;
         if (retval == 1)
         {
-            if (data->grantedQoS != 0x80)
+            if (data->grantedQoS != MQTTQOS_SUBFAIL)
             {
                 rc = MQTTSetMessageHandler(c, topicFilter, messageHandler);
             }
@@ -758,7 +758,7 @@ int MQTTV5Subscribe(MQTTClient *client, const char *topicFilter, enum MQTTQoS re
                     MQTTProperties *properties, MQTTSubscribe_options options, messageHandler messageHandler)
 {
     MQTTSubackData data;
-    return MQTTSubscribeWithResults(c, topicFilter, requestedQoS, messageHandler, &data);
+    return MQTTV5SubscribeWithResults(c, topicFilter, requestedQoS, properties, options, messageHandler, &data);
 }
 #else
 int MQTTSubscribe(MQTTClient *c, const char *topicFilter, enum MQTTQoS requestedQoS,

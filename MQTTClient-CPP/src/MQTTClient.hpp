@@ -947,7 +947,7 @@ int MQTT::Client<Network, Timer, MAX_MQTT_PACKET_SIZE, MAX_MESSAGE_HANDLERS>::su
 {
 	int rc = prepareSubscribe( topicFilter, qos, data);
 
-	if (rc == SUCCESS && data.grantedQoS != 0x80)
+	if (rc == SUCCESS && data.grantedQoS != MQTTQOS_SUBFAIL)
 		rc = setMessageHandler(topicFilter, messageHandler);
 	return rc;
 }
@@ -968,7 +968,7 @@ int MQTT::Client<Network, Timer, MAX_MQTT_PACKET_SIZE, MAX_MESSAGE_HANDLERS>::su
 {
 	int rc = prepareSubscribe( topicFilter, qos, data);
 
-	if (rc == SUCCESS && data.grantedQoS != 0x80)
+	if (rc == SUCCESS && data.grantedQoS != MQTTQOS_SUBFAIL)
 		rc = setMessageHandler(topicFilter, item, method);
 	return rc;
 }
