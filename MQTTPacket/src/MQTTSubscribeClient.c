@@ -164,7 +164,11 @@ int MQTTDeserialize_suback(unsigned short *packetid, int maxcount, int *count, u
 #endif
 		goto exit;
 
-	curdata += (rc = MQTTPacket_decodeBuf(curdata, &mylen)); /* read remaining length */
+	rc = MQTTPacket_decodeBuf(curdata, &mylen);
+	if (rc < 0) { 
+		goto exit;
+	}
+	curdata += rc; /* read remaining length */
 	enddata = curdata + mylen;
 	if (enddata - curdata < 2)
 		goto exit;

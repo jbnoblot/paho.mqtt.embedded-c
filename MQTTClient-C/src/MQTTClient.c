@@ -695,8 +695,9 @@ int MQTTSubscribeWithResults(MQTTClient *c, const char *topicFilter, enum MQTTQo
 #if defined(MQTT_TASK)
     MutexLock(&c->mutex);
 #endif
-    if (!c->isconnected)
+    if (!c->isconnected) {
         goto exit;
+    }
 
     TimerInit(&timer);
     TimerCountdownMS(&timer, c->command_timeout_ms);
@@ -742,7 +743,9 @@ int MQTTSubscribeWithResults(MQTTClient *c, const char *topicFilter, enum MQTTQo
 #endif /* MQTTV5 */
     }
     else
+    {
         rc = MQTTCLIENT_FAILURE;
+    }
 
 exit:
     if (rc == MQTTCLIENT_FAILURE)
@@ -820,12 +823,16 @@ int MQTTUnsubscribe(MQTTClient *c, const char *topicFilter)
             /* remove the subscription message handler associated with this topic, if there is one */
         }
     }
-    else
+    else 
+    {
         rc = MQTTCLIENT_FAILURE;
+    }
 
 exit:
-    if (rc == MQTTCLIENT_FAILURE)
+    if (rc == MQTTCLIENT_FAILURE) 
+    {
         MQTTCloseSession(c);
+    }
 #if defined(MQTT_TASK)
     MutexUnlock(&c->mutex);
 #endif
@@ -848,8 +855,10 @@ int MQTTPublish(MQTTClient *c, const char *topicName, MQTTMessage *message)
 #if defined(MQTT_TASK)
     MutexLock(&c->mutex);
 #endif
-    if (!c->isconnected)
+    if (!c->isconnected) 
+    {
         goto exit;
+    }
 
     TimerInit(&timer);
     TimerCountdownMS(&timer, c->command_timeout_ms);
@@ -900,19 +909,24 @@ int MQTTPublish(MQTTClient *c, const char *topicName, MQTTMessage *message)
                 rc = MQTTCLIENT_FAILURE;
             }
 #else
-            if (MQTTDeserialize_ack(&type, &dup, &mypacketid, c->readbuf, c->readbuf_size) != 1)
+            if (MQTTDeserialize_ack(&type, &dup, &mypacketid, c->readbuf, c->readbuf_size) != 1) 
+            {
                 rc = MQTTCLIENT_FAILURE;
+            }
 #endif
         }
         else
+        {
             rc = MQTTCLIENT_FAILURE;
+        }
     }
     else if (message->qos == MQTTQOS_2)
     {
         if (waitfor(c, PUBCOMP, &timer) == PUBCOMP)
         {
             unsigned short mypacketid;
-            unsigned char dup, type;
+            unsigned char dup;
+            unsigned char type;
 #if defined(MQTTV5)
             unsigned char reasonCode;
             rc = MQTTV5Deserialize_ack(&type, &dup, &mypacketid, &reasonCode, c->recvProperties, c->readbuf, c->readbuf_size);
@@ -932,12 +946,16 @@ int MQTTPublish(MQTTClient *c, const char *topicName, MQTTMessage *message)
                 rc = MQTTCLIENT_FAILURE;
             }
 #else
-            if (MQTTDeserialize_ack(&type, &dup, &mypacketid, c->readbuf, c->readbuf_size) != 1)
+            if (MQTTDeserialize_ack(&type, &dup, &mypacketid, c->readbuf, c->readbuf_size) != 1) 
+            {
                 rc = MQTTCLIENT_FAILURE;
+            }
 #endif
         }
-        else
+        else 
+        {
             rc = MQTTCLIENT_FAILURE;
+        }
     }
 
 exit:
@@ -1023,8 +1041,10 @@ int MQTTV5PublishWithResults(MQTTClient *c, const char *topicName, MQTTMessage *
 #if defined(MQTT_TASK)
     MutexLock(&c->mutex);
 #endif
-    if (!c->isconnected)
+    if (!c->isconnected) 
+    {
         goto exit;
+    }
 
     TimerInit(&timer);
     TimerCountdownMS(&timer, c->command_timeout_ms);
@@ -1068,7 +1088,9 @@ int MQTTV5PublishWithResults(MQTTClient *c, const char *topicName, MQTTMessage *
             }
         }
         else
+        {
             rc = MQTTCLIENT_FAILURE;
+        }
     }
     else if (message->qos == MQTTQOS_2)
     {
@@ -1094,7 +1116,9 @@ int MQTTV5PublishWithResults(MQTTClient *c, const char *topicName, MQTTMessage *
             }
         }
         else
+        {
             rc = MQTTCLIENT_FAILURE;
+        }
     }
 
 exit:

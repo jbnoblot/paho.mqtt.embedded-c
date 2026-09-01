@@ -63,6 +63,9 @@ int MQTTDeserialize_publish(unsigned char *dup, unsigned char *qos, unsigned cha
 	*retained = (header & MQTT_HEADER_RETAIN_MASK) != 0;
 
 	rc = MQTTPacket_decodeBuf(curdata, &mylen);
+	if (rc < 0) { 
+		goto exit;
+	}
 	curdata += rc; /* read remaining length */
 	enddata = curdata + mylen;
 

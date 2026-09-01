@@ -87,7 +87,11 @@ int MQTTDeserialize_connect(MQTTPacket_connectData *data, unsigned char *buf, in
 		goto exit;
 	}
 
-	curdata += MQTTPacket_decodeBuf(curdata, &mylen); /* read remaining length */
+	rc = MQTTPacket_decodeBuf(curdata, &mylen);
+	if (rc < 0) { 
+		goto exit;
+	}
+	curdata += rc; /* read remaining length */
 
 	if (!readMQTTLenString(&Protocol, &curdata, enddata) ||
 		enddata - curdata < 0) /* do we have enough data to read the protocol version byte? */

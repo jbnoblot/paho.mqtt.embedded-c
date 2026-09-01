@@ -192,7 +192,7 @@ int MQTTDeserialize_connack(unsigned char* sessionPresent, unsigned char* connac
 		goto exit;
 	}
 	rc = MQTTPacket_decodeBuf(curdata, &mylen);
-	if (rc == 0) { 
+	if (rc < 0) { 
 		goto exit;
 	}
 	curdata += rc; /* read remaining length */
