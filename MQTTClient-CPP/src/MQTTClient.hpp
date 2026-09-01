@@ -37,6 +37,9 @@
 #if !defined(MQTTCLIENT_QOS2)
     #define MQTTCLIENT_QOS2 0
 #endif
+#if !defined(MQTTQOS_SUBFAIL)
+    #define MQTTQOS_SUBFAIL 0x80
+#endif
 
 namespace MQTT
 {

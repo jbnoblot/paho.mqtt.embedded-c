@@ -123,8 +123,8 @@ char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf,
 	int strindex = 0;
 	int lenlen = 0;
 
-	header.byte = buf[index++];
-	lenlen = MQTTPacket_decodeBuf(&buf[index], &rem_length)
+	header = buf[index++];
+	lenlen = MQTTPacket_decodeBuf(&buf[index], &rem_length);
 	if (lenlen < 0) {/* read remaining length */
 		return strbuf;
 	}
@@ -198,8 +198,8 @@ char* MQTTFormat_toServerString(char* strbuf, int strbuflen, unsigned char* buf,
 	int strindex = 0;
 	int lenlen = 0;
 
-	header.byte = buf[index++];
-	lenlen = MQTTPacket_decodeBuf(&buf[index], &rem_length)
+	header = buf[index++];
+	lenlen = MQTTPacket_decodeBuf(&buf[index], &rem_length);
 	if (lenlen < 0) {/* read remaining length */
 		return strbuf;
 	}
