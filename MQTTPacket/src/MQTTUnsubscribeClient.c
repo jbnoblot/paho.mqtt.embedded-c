@@ -137,11 +137,13 @@ int MQTTDeserialize_unsuback(unsigned short* packetid, unsigned char* buf, size_
 	rc = MQTTV5Deserialize_subunsuback(UNSUBACK, packetid, properties,
 		                       maxcount, count, reasonCodes, buf, buflen);
 	if (rc == 1) {
-        for (int i = 0; i < *count; i++) {
+        /*
+		for (int i = 0; i < *count; i++) {
             if (reasonCodes[i] >= 0x80) {
                 rc = 0;
             }
         }
+		*/
     }
 #else
 	rc = MQTTDeserialize_ack(&type, &dup, packetid, buf, buflen);

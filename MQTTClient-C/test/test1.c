@@ -360,7 +360,7 @@ int test1(struct Options options)
 	fprintf(xml, "<testcase classname=\"test1\" name=\"single threaded client using receive\"");
 	global_start_time = start_clock();
 	failures = 0;
-	MyLog(LOGA_INFO, "Starting test 1 - single threaded client using receive");
+	MyLog(LOGA_INFO, "Starting test1 1 - single threaded client using receive");
 
   NetworkInit(&n);
   NetworkConnect(&n, options.host, options.port);
@@ -409,7 +409,7 @@ int test1(struct Options options)
 	assert("Disconnect successful", rc == MQTTCLIENT_SUCCESS, "rc was %d", rc);
 
 exit:
-	MyLog(LOGA_INFO, "TEST1: test %s. %d tests run, %d failures.",
+	MyLog(LOGA_INFO, "TEST1 1: test %s. %d tests run, %d failures.",
 			(failures == 0) ? "passed" : "failed", tests, failures);
 	write_test_result();
 	return failures;
@@ -439,7 +439,7 @@ int test2(struct Options options)
 	fprintf(xml, "<testcase classname=\"test2\" name=\"connack return data\"");
 	global_start_time = start_clock();
 	failures = 0;
-	MyLog(LOGA_INFO, "Starting test 2 - connack return data");
+	MyLog(LOGA_INFO, "Starting test1 2 - connack return data");
 
   NetworkInit(&n);
   NetworkConnect(&n, options.host, options.port);
@@ -518,7 +518,7 @@ int test2(struct Options options)
   NetworkDisconnect(&n);
 
 exit:
-	MyLog(LOGA_INFO, "TEST1: test %s. %d tests run, %d failures.",
+	MyLog(LOGA_INFO, "TEST1 2: test %s. %d tests run, %d failures.",
 			(failures == 0) ? "passed" : "failed", tests, failures);
 	write_test_result();
 	return failures;
@@ -596,7 +596,7 @@ int test3(struct Options options)
   fprintf(xml, "<testcase classname=\"test3\" name=\"session state\"");
   global_start_time = start_clock();
   failures = 0;
-  MyLog(LOGA_INFO, "Starting test 3 - session state");
+  MyLog(LOGA_INFO, "Starting test1 3 - session state");
 
   NetworkInit(&n);
   MQTTClientInit(&c, &n, 1000, buf, 100, readbuf, 100);
@@ -758,7 +758,7 @@ int test3(struct Options options)
   NetworkDisconnect(&n);
 
 exit:
-  MyLog(LOGA_INFO, "TEST2: test %s. %d tests run, %d failures.",
+  MyLog(LOGA_INFO, "TEST1 3: test %s. %d tests run, %d failures.",
       (failures == 0) ? "passed" : "failed", tests, failures);
   write_test_result();
   return failures;

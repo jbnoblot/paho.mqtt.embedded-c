@@ -501,7 +501,7 @@ int test6(struct Options options)
 	fprintf(xml, "<testcase classname=\"test1\" name=\"de/serialization\"");
 	global_start_time = start_clock();
 	failures = 0;
-	MyLog(LOGA_INFO, "Starting test 2 - serialization of connack and back");
+	MyLog(LOGA_INFO, "Starting test 6 - serialization of connack and back");
 
 	connackProperties.count = connackProperties.length = 0;
 	connackProperties.max_count = 10;
@@ -644,9 +644,9 @@ int test8(struct Options options)
 
 	assert("count should be the same", count == count2, "counts were different %d\n", count2);
 
-	for (i = 0; i < count2; ++i)
+	for (i = 0; i < count2; ++i) {
 		assert("qoss should be the same", reasonCodes[i] == reasonCodes2[i], "qoss were different %d\n", reasonCodes2[i]);
-
+	}
 	rc = checkMQTTProperties(&properties, &outProperties);
 
 /* exit: */

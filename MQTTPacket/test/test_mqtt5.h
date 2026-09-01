@@ -40,7 +40,7 @@ int test_v5(struct Options options)
 	fprintf(xml, "<testcase classname=\"test_v5\" name=\"MQTTV5_scenario\"");
 	global_start_time = start_clock();
 	failures = 0;
-	MyLog(LOGA_INFO, "Starting test 2 - simple MQTT V5 scenario");
+	MyLog(LOGA_INFO, "Starting test_v5 2 - simple MQTT V5 scenario");
 
 	MyLog(LOGA_INFO, "Sending to hostname %s port %d", options.host, options.port);
 

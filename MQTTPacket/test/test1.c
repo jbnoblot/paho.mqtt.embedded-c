@@ -158,7 +158,7 @@ int test2(struct Options options)
 	fprintf(xml, "<testcase classname=\"test1\" name=\"de/serialization\"");
 	global_start_time = start_clock();
 	failures = 0;
-	MyLog(LOGA_INFO, "Starting test 2 - serialization of publish and back");
+	MyLog(LOGA_INFO, "Starting test1 2 - serialization of publish and back");
 
 	topicString.cstring = "mytopic";
 	rc = MQTTSerialize_publish(buf, buflen, dup, qos, retained, msgid, &topicString,
@@ -216,7 +216,7 @@ int test3(struct Options options)
 	fprintf(xml, "<testcase classname=\"test1\" name=\"de/serialization\"");
 	global_start_time = start_clock();
 	failures = 0;
-	MyLog(LOGA_INFO, "Starting test 2 - serialization of subscribe and back");
+	MyLog(LOGA_INFO, "Starting test1 3 - serialization of subscribe and back");
 
 	topicStrings[0].cstring = "mytopic";
 	topicStrings[1].cstring = "mytopic2";
@@ -267,7 +267,7 @@ int test4(struct Options options)
 	fprintf(xml, "<testcase classname=\"test1\" name=\"de/serialization\"");
 	global_start_time = start_clock();
 	failures = 0;
-	MyLog(LOGA_INFO, "Starting test 4 - serialization of suback and back");
+	MyLog(LOGA_INFO, "Starting test1 4 - serialization of suback and back");
 
 	rc = MQTTSerialize_suback(buf, buflen, msgid, count, granted_qoss);
 	assert("good rc from serialize suback", rc > 0, "rc was %d\n", rc);
@@ -312,7 +312,7 @@ int test5(struct Options options)
 	fprintf(xml, "<testcase classname=\"test1\" name=\"de/serialization\"");
 	global_start_time = start_clock();
 	failures = 0;
-	MyLog(LOGA_INFO, "Starting test 2 - serialization of unsubscribe and back");
+	MyLog(LOGA_INFO, "Starting test1 5 - serialization of unsubscribe and back");
 
 	topicStrings[0].cstring = "mytopic";
 	topicStrings[1].cstring = "mytopic2";
@@ -333,7 +333,7 @@ int test5(struct Options options)
 					checkMQTTStrings(topicStrings[i], topicStrings2[i]), "topics were different %s\n", "");
 
 /* exit: */
-	MyLog(LOGA_INFO, "TEST5: test %s. %d tests run, %d failures.",
+	MyLog(LOGA_INFO, "TEST15: test %s. %d tests run, %d failures.",
 			(failures == 0) ? "passed" : "failed", tests, failures);
 	write_test_result();
 	return failures;
@@ -355,7 +355,7 @@ int test6(struct Options options)
 	fprintf(xml, "<testcase classname=\"test1\" name=\"de/serialization\"");
 	global_start_time = start_clock();
 	failures = 0;
-	MyLog(LOGA_INFO, "Starting test 2 - serialization of connack and back");
+	MyLog(LOGA_INFO, "Starting test1 6 - serialization of connack and back");
 
 	rc = MQTTSerialize_connack(buf, buflen, connack_rc, sessionPresent);
 	assert("good rc from serialize connack", rc > 0, "rc was %d\n", rc);
@@ -369,7 +369,7 @@ int test6(struct Options options)
 			"session present flags were different %d\n", sessionPresent2);
 
 /* exit: */
-	MyLog(LOGA_INFO, "TEST6: test %s. %d tests run, %d failures.",
+	MyLog(LOGA_INFO, "TEST1 6: test %s. %d tests run, %d failures.",
 			(failures == 0) ? "passed" : "failed", tests, failures);
 	write_test_result();
 	return failures;
@@ -385,7 +385,7 @@ int test7(struct Options options)
 	fprintf(xml, "<testcase classname=\"test7\" name=\"de/serialization\"");
 	global_start_time = start_clock();
 	failures = 0;
-	MyLog(LOGA_INFO, "Starting test 7 - serialization of disconnect and back");
+	MyLog(LOGA_INFO, "Starting test1 7 - serialization of disconnect and back");
 
 	rc = MQTTSerialize_disconnect(buf, buflen);
 	assert("good rc from serialize disconnect", rc > 0, "rc was %d\n", rc);
